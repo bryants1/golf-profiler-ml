@@ -1,3 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force load missing Tailwind classes */
+@layer utilities {
+  .bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
+  .from-green-50 { --tw-gradient-from: #f0fdf4; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(240 253 244 / 0)); }
+  .to-blue-50 { --tw-gradient-to: #eff6ff; }
+  .bg-green-50 { background-color: #f0fdf4; }
+  .bg-blue-50 { background-color: #eff6ff; }
+  .text-green-800 { color: #166534; }
+  .text-purple-600 { color: #9333ea; }
+  .hover\:border-green-500:hover { border-color: #22c55e; }
+  .hover\:bg-green-50:hover { background-color: #f0fdf4; }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +22,4 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
 }
