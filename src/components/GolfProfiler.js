@@ -4,6 +4,30 @@ import { ChevronRight, RotateCcw, MapPin, Star, Users, Clock, Brain, TrendingUp,
 // Import ML System - In a real app, these would be separate files
 import MLService from '../ml/MLService.js';  // Changed from ../../ml/
 
+// Override localStorage methods to use memory for Claude.ai compatibility
+if (typeof window !== 'undefined') {
+  const memoryStorage = {};
+  const originalSetItem = Storage.prototype.setItem;
+  const originalGetItem = Storage.prototype.getItem;
+
+  Storage.prototype.setItem = function(key, value) {
+    if (key.includes('golf_profiler')) {
+      memoryStorage[key] = value;
+      console.log(`📝 Stored in memory: ${key}`);
+    } else {
+      originalSetItem.call(this, key, value);
+    }
+  };
+
+  Storage.prototype.getItem = function(key) {
+    if (key.includes('golf_profiler')) {
+      return memoryStorage[key] || null;
+    } else {
+      return originalGetItem.call(this, key);
+    }
+  };
+}
+
 const GolfProfiler = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -261,6 +285,65 @@ const GolfProfiler = () => {
     }
   ];
 
+  // Fixed scoring algorithm using weighted averages
+  const calculateWeightedScores = (allAnswers) => {
+    const dimensionScores = {
+      skillLevel: [], socialness: [], traditionalism: [], luxuryLevel: [],
+      competitiveness: [], ageGeneration: [], genderLean: [], amenityImportance: [],
+      pace: [], courseStyle: {}
+    };
+
+    // Question type weights (more important questions have higher weight)
+    const questionWeights = {
+      'starter': 1.2,
+      'core': 1.5,
+      'skill_assessment': 1.8,
+      'social': 1.3,
+      'lifestyle': 1.0,
+      'knowledge': 1.1,
+      'personality': 1.4,
+      'preparation': 1.0
+    };
+
+    // Collect all scores with weights
+    Object.entries(allAnswers).forEach(([questionId, answerData]) => {
+      const question = questionBank.find(q => q.id === questionId);
+      const weight = questionWeights[question?.type] || 1.0;
+      const rawScores = answerData.rawScores || {};
+
+      Object.entries(rawScores).forEach(([dimension, value]) => {
+        if (dimension === 'courseStyle') {
+          dimensionScores.courseStyle[value] = (dimensionScores.courseStyle[value] || 0) + 1;
+        } else if (dimensionScores[dimension]) {
+          dimensionScores[dimension].push({ value, weight });
+        }
+      });
+    });
+
+    // Calculate weighted averages
+    const finalScores = {
+      skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
+      competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
+      courseStyle: dimensionScores.courseStyle, pace: 0
+    };
+
+    Object.keys(finalScores).forEach(dimension => {
+      if (dimension === 'courseStyle') return; // Already handled above
+
+      const scores = dimensionScores[dimension];
+      if (scores.length > 0) {
+        const weightedSum = scores.reduce((sum, score) => sum + (score.value * score.weight), 0);
+        const totalWeight = scores.reduce((sum, score) => sum + score.weight, 0);
+        const average = weightedSum / totalWeight;
+
+        // Scale to 0-10 range but don't artificially cap everything at 10
+        finalScores[dimension] = Math.round(Math.max(0, Math.min(10, average)) * 10) / 10;
+      }
+    });
+
+    return finalScores;
+  };
+
   // Initialize ML service and first question
   useEffect(() => {
     const initializeML = async () => {
@@ -281,25 +364,25 @@ const GolfProfiler = () => {
     const currentQ = selectedQuestions[currentQuestion];
     const selectedOption = currentQ.options[optionIndex];
 
+    console.log('🔍 selectedOption:', selectedOption);
+    console.log('🔍 selectedOption.scores:', selectedOption?.scores);
+    console.log('🔍 current scores before update:', scores);
+
+    // Store raw scores for better calculation
     const newAnswers = {
       ...answers,
       [currentQ.id]: {
         questionText: currentQ.question,
         answer: selectedOption.text,
-        optionIndex
+        optionIndex,
+        rawScores: selectedOption.scores // Store raw scores
       }
     };
     setAnswers(newAnswers);
 
-    // Update scores
-    const newScores = { ...scores };
-    Object.entries(selectedOption.scores).forEach(([dimension, value]) => {
-      if (dimension === 'courseStyle') {
-        newScores.courseStyle = { ...newScores.courseStyle, [value]: (newScores.courseStyle[value] || 0) + 1 };
-      } else {
-        newScores[dimension] = Math.max(0, Math.min(10, newScores[dimension] + value));
-      }
-    });
+    // Calculate scores using weighted averaging instead of accumulation
+    const newScores = calculateWeightedScores(newAnswers);
+    console.log('🎯 newScores after weighted calculation:', newScores);
     setScores(newScores);
 
     // Determine next question using ML
@@ -340,6 +423,12 @@ const GolfProfiler = () => {
         sessionId,
         { enhancementLevel: 'full' }
       );
+
+      // Debug the courseStyle recommendation
+      console.log('🔍 Enhanced profile courseStyle:', enhancedProfile.recommendations?.courseStyle);
+      if (typeof enhancedProfile.recommendations?.courseStyle === 'object') {
+        console.log('🔍 CourseStyle object details:', enhancedProfile.recommendations.courseStyle);
+      }
 
       setProfile(enhancedProfile);
       setIsComplete(true);
@@ -402,25 +491,8 @@ const GolfProfiler = () => {
   };
 
   const handleUpdateAnswers = async () => {
-    const newScores = {
-      skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
-      competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
-      courseStyle: {}, pace: 0
-    };
-
-    Object.values(editingAnswers).forEach(answer => {
-      const question = questionBank.find(q => q.question === answer.questionText);
-      if (question) {
-        const option = question.options[answer.optionIndex];
-        Object.entries(option.scores).forEach(([dimension, value]) => {
-          if (dimension === 'courseStyle') {
-            newScores.courseStyle = { ...newScores.courseStyle, [value]: (newScores.courseStyle[value] || 0) + 1 };
-          } else {
-            newScores[dimension] = Math.max(0, Math.min(10, newScores[dimension] + value));
-          }
-        });
-      }
-    });
+    // Recalculate scores with new answers using weighted system
+    const newScores = calculateWeightedScores(editingAnswers);
 
     setAnswers(editingAnswers);
     setScores(newScores);
@@ -446,6 +518,16 @@ const GolfProfiler = () => {
       competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
       courseStyle: {}, pace: 0
     });
+
+    // Reinitialize the first question
+    setTimeout(() => {
+      const firstQuestion = mlService.selectNextQuestion({}, {
+        skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
+        competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
+        courseStyle: {}, pace: 0
+      }, questionBank, 0);
+      setSelectedQuestions([firstQuestion]);
+    }, 0);
   };
 
   // Helper functions (simplified versions)
@@ -539,7 +621,7 @@ const GolfProfiler = () => {
               {profile.mlInsights?.personalityPatterns && (
                 <div className="mt-2 text-xs text-purple-600">
                   <Brain size={12} className="inline mr-1" />
-                  ML: {profile.mlInsights.personalityPatterns.insights}
+                  ML: {profile.mlInsights.personalityPatterns.insights || 'Enhanced personality analysis'}
                 </div>
               )}
             </div>
@@ -573,23 +655,42 @@ const GolfProfiler = () => {
               )}
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p><strong>Preferred Style:</strong> {profile.recommendations?.courseStyle?.primary || profile.recommendations?.courseStyle}</p>
-              <p><strong>Budget Range:</strong> {profile.recommendations?.budgetLevel?.primary || profile.recommendations?.budgetLevel}</p>
-              <p><strong>Key Amenities:</strong> {
-                Array.isArray(profile.recommendations?.amenities?.essential)
-                  ? profile.recommendations.amenities.essential.join(", ")
-                  : (profile.recommendations?.amenities || []).join(", ")
+              <p><strong>Preferred Style:</strong> {
+                typeof profile.recommendations?.courseStyle === 'string'
+                  ? profile.recommendations.courseStyle
+                  : profile.recommendations?.courseStyle?.primary ||
+                    (scores.traditionalism >= 7 ? "Classic parkland" : "Parkland")
               }</p>
-              <p><strong>Lodging:</strong> {profile.recommendations?.lodging}</p>
+              <p><strong>Budget Range:</strong> {
+                typeof profile.recommendations?.budgetLevel === 'string'
+                  ? profile.recommendations.budgetLevel
+                  : profile.recommendations?.budgetLevel?.primary || 'Mid-range'
+              }</p>
+              <p><strong>Key Amenities:</strong> {
+                Array.isArray(profile.recommendations?.amenities)
+                  ? profile.recommendations.amenities.join(', ')
+                  : Array.isArray(profile.recommendations?.amenities?.essential)
+                    ? profile.recommendations.amenities.essential.join(', ')
+                    : 'Basic facilities'
+              }</p>
+              <p><strong>Lodging:</strong> {
+                typeof profile.recommendations?.lodging === 'string'
+                  ? profile.recommendations.lodging
+                  : profile.recommendations?.lodging?.recommended || 'Comfortable location'
+              }</p>
 
               {profile.recommendations?.mlEnhanced && (
                 <div className="mt-4 p-3 bg-purple-50 rounded border-l-4 border-purple-200">
                   <p className="text-sm text-purple-700">
-                    <strong>ML Insights:</strong> {profile.recommendations.explanation}
+                    <strong>ML Insights:</strong> {profile.recommendations.explanation || 'Enhanced recommendations based on similar golfers'}
                   </p>
                   {profile.recommendations.alternativeOptions?.courseStyles && (
                     <p className="text-xs text-purple-600 mt-1">
-                      Alternative styles: {profile.recommendations.alternativeOptions.courseStyles.map(cs => cs.style).join(", ")}
+                      Alternative styles: {
+                        Array.isArray(profile.recommendations.alternativeOptions.courseStyles)
+                          ? profile.recommendations.alternativeOptions.courseStyles.map(cs => cs.style || cs).join(", ")
+                          : 'Various options available'
+                      }
                     </p>
                   )}
                 </div>
@@ -810,7 +911,8 @@ const GolfProfiler = () => {
                           [questionId]: {
                             ...answer,
                             optionIndex: parseInt(e.target.value),
-                            answer: question.options[parseInt(e.target.value)].text
+                            answer: question.options[parseInt(e.target.value)].text,
+                            rawScores: question.options[parseInt(e.target.value)].scores
                           }
                         })}
                         className="w-full p-2 border rounded hover:border-blue-400 focus:border-blue-500 focus:outline-none"

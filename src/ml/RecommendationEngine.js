@@ -74,6 +74,50 @@ export class RecommendationEngine {
     };
   }
 
+  // Lodging recommendations
+  recommendLodging(currentScores, similarProfiles) {
+    const luxuryLevel = currentScores.luxuryLevel || 0;
+    const socialness = currentScores.socialness || 0;
+
+    let recommendedLodging;
+    if (luxuryLevel >= 7) recommendedLodging = 'Resort or boutique hotel';
+    else if (socialness >= 7) recommendedLodging = 'Hotel with social areas';
+    else recommendedLodging = 'Comfortable, convenient location';
+
+    // Analyze patterns from similar users
+    const lodgingPreferences = {};
+    similarProfiles.forEach(profile => {
+      const userLuxury = profile.scores.luxuryLevel || 0;
+      const userSocial = profile.scores.socialness || 0;
+
+      if (userLuxury >= 7) {
+        lodgingPreferences['Resort'] = (lodgingPreferences['Resort'] || 0) + profile.similarity;
+      } else if (userSocial >= 7) {
+        lodgingPreferences['Social hotel'] = (lodgingPreferences['Social hotel'] || 0) + profile.similarity;
+      } else {
+        lodgingPreferences['Convenient'] = (lodgingPreferences['Convenient'] || 0) + profile.similarity;
+      }
+    });
+
+    return {
+      recommended: recommendedLodging,
+      alternatives: Object.keys(lodgingPreferences).filter(type =>
+        type !== recommendedLodging.split(' ')[0]
+      ),
+      reasoning: this.explainLodgingChoice(recommendedLodging, luxuryLevel, socialness)
+    };
+  }
+
+  explainLodgingChoice(lodging, luxury, socialness) {
+    if (lodging.includes('Resort')) {
+      return 'Premium accommodations matching your luxury preferences';
+    } else if (lodging.includes('social')) {
+      return 'Hotels with social spaces for networking and group activities';
+    } else {
+      return 'Practical, comfortable lodging focused on convenience and value';
+    }
+  }
+
   // Budget level recommendations
   recommendBudgetLevel(currentScores, similarProfiles) {
     const budgetVotes = { low: 0, medium: 0, high: 0 };
@@ -119,14 +163,31 @@ export class RecommendationEngine {
     // Score amenities based on similar users
     similarProfiles.forEach(profile => {
       const weight = profile.similarity;
-      const userAmenities = profile.profile?.recommendations?.amenities || [];
+      let userAmenities = profile.profile?.recommendations?.amenities || [];
 
-      userAmenities.forEach(amenity => {
-        if (amenityScores.hasOwnProperty(amenity)) {
-          amenityScores[amenity] += weight;
+      // Handle different amenities formats
+      if (typeof userAmenities === 'string') {
+        userAmenities = [userAmenities];
+      } else if (!Array.isArray(userAmenities)) {
+        // If it's an object with essential/recommended properties
+        if (userAmenities.essential) {
+          userAmenities = userAmenities.essential;
+        } else if (userAmenities.recommended) {
+          userAmenities = userAmenities.recommended;
+        } else {
+          userAmenities = [];
         }
-      });
+      }
+
+  // Now safely iterate over the array
+  if (Array.isArray(userAmenities)) {
+    userAmenities.forEach(amenity => {
+      if (amenityScores.hasOwnProperty(amenity)) {
+        amenityScores[amenity] += weight;
+      }
     });
+  }
+});
 
     // Boost scores based on user characteristics
     const amenityImportance = currentScores.amenityImportance || 0;
