@@ -87,10 +87,10 @@ export class SupabaseDataManager {
     }
   }
 
-  async getProfiles(filters = {}) {
+  async async getProfiles(filters = {}) {
     if (!this.isConnected) {
       console.log('📊 FALLBACK: Returning empty profiles array');
-      return []; // Make sure we always return an array
+      return []; // Always return array
     }
 
     try {
@@ -109,8 +109,13 @@ export class SupabaseDataManager {
 
       console.log(`📊 Retrieved ${data?.length || 0} profiles from Supabase`);
 
-      // ENSURE WE ALWAYS RETURN AN ARRAY
-      if (!data || !Array.isArray(data)) {
+      // CRITICAL: Always return an array
+      if (!data) {
+        console.warn('⚠️ Supabase returned null data, using empty array');
+        return [];
+      }
+
+      if (!Array.isArray(data)) {
         console.warn('⚠️ Supabase returned non-array data, using empty array');
         return [];
       }
@@ -127,7 +132,7 @@ export class SupabaseDataManager {
       }));
     } catch (error) {
       console.error('❌ Error retrieving profiles:', error);
-      return []; // Always return array on error
+      return []; // ALWAYS return array on error
     }
   }
 

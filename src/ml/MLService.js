@@ -157,6 +157,14 @@ export class MLService {
           id: `quality_profile_${index}_${i}`,
           sessionId: `mock_session_${index}_${i}`, // ADD THIS LINE
           timestamp: Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000,
+          answers: {  // ✅ ADD THIS
+            skill: archetype.skill,
+            social: archetype.social,
+            luxury: archetype.luxury,
+            tradition: archetype.tradition,
+            competitive: archetype.competitive,
+            amenity: archetype.amenity
+          },
           scores: {
             skillLevel: Math.max(0, Math.min(10, archetype.skill + Math.floor(Math.random() * 3) - 1)),
             socialness: Math.max(0, Math.min(10, archetype.social + Math.floor(Math.random() * 3) - 1)),
