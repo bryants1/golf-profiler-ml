@@ -29,7 +29,9 @@ if (typeof window !== 'undefined') {
 }
 
 const GolfProfiler = () => {
-  // 🔥 DECLARE ALL HOOKS FIRST (React requirement)
+  // 🔥 ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL LOGIC
+
+  // Core State hooks
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [profile, setProfile] = useState(null);
@@ -38,7 +40,7 @@ const GolfProfiler = () => {
   const [mlService] = useState(() => new MLService());
   const [sessionId] = useState(() => Date.now().toString());
 
-  // UI States
+  // UI State hooks
   const [showFeedback, setShowFeedback] = useState(false);
   const [showMLStats, setShowMLStats] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -46,7 +48,7 @@ const GolfProfiler = () => {
   const [editingAnswers, setEditingAnswers] = useState({});
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
-  // ML States
+  // ML State hooks
   const [mlInsights, setMlInsights] = useState(null);
   const [similarityInsights, setSimilarityInsights] = useState(null);
   const [recommendationInsights, setRecommendationInsights] = useState(null);
@@ -58,7 +60,25 @@ const GolfProfiler = () => {
     courseStyle: {}, pace: 0
   });
 
-  // 🔥 NOW CHECK FOR ADMIN MODE (after all hooks)
+  // 🔥 ALL useEffect HOOKS MUST ALSO BE HERE - BEFORE CONDITIONAL LOGIC
+
+  // Initialize ML service and first question
+  useEffect(() => {
+    const initializeML = async () => {
+      if (selectedQuestions.length === 0) {
+        const firstQuestion = mlService.selectNextQuestion({}, scores, questionBank, 0);
+        setSelectedQuestions([firstQuestion]);
+
+        // Load ML stats
+        const stats = mlService.getMLStatistics();
+        setMlStats(stats);
+      }
+    };
+
+    initializeML();
+  }, [mlService, scores, selectedQuestions.length]);
+
+  // 🔥 NOW CHECK FOR ADMIN MODE (after ALL hooks)
   const urlParams = new URLSearchParams(window.location.search);
   const isAdmin = urlParams.get('admin') === 'true';
 
@@ -67,11 +87,6 @@ const GolfProfiler = () => {
     console.log('🔧 Admin mode detected - showing admin interface');
     return <MLAdminInterface mlService={mlService} />;
   }
-
-  // Continue with your existing useEffect and component code...
-  useEffect(() => {
-    // your existing useEffect code
-  }, []);
 
   // Question bank
   const questionBank = [
