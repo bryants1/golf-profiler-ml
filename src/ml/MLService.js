@@ -309,6 +309,10 @@ export class MLService {
         feedbackWeight: 0.9 + Math.random() * 0.2, // Higher quality feedback
         credibilityScore: 0.8 + Math.random() * 0.2 // More credible
     });
+  } // ✅ Close the for loop here
+
+  return feedbacks; // ✅ Return OUTSIDE the loop
+}
     return feedbacks;
   }
 

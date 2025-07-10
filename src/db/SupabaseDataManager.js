@@ -86,6 +86,7 @@ export class SupabaseDataManager {
       return false;
     }
   }
+
   async getProfiles(filters = {}) {
     if (!this.isConnected) {
       console.log('📊 FALLBACK: Returning empty profiles array');
@@ -127,44 +128,6 @@ export class SupabaseDataManager {
     } catch (error) {
       console.error('❌ Error retrieving profiles:', error);
       return []; // Always return array on error
-    }
-  }
-  
-  async getProfiles(filters = {}) {
-    if (!this.isConnected) {
-      console.log('📊 FALLBACK: Returning empty profiles array');
-      return [];
-    }
-
-    try {
-      let query = this.supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filters.limit) query = query.limit(filters.limit);
-      if (filters.minTimestamp) {
-        query = query.gte('created_at', new Date(filters.minTimestamp).toISOString());
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      console.log(`📊 Retrieved ${data.length} profiles from Supabase`);
-
-      return data.map(profile => ({
-        id: profile.id,
-        sessionId: profile.session_id,
-        scores: profile.scores,
-        answers: profile.answers,
-        profile: profile.recommendations,
-        totalQuestions: profile.total_questions,
-        questionSequence: profile.question_sequence,
-        timestamp: new Date(profile.created_at).getTime()
-      }));
-    } catch (error) {
-      console.error('❌ Error retrieving profiles:', error);
-      return [];
     }
   }
 
