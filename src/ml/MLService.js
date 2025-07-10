@@ -523,9 +523,9 @@ export class MLService {
   }
 
   // Get user similarity insights - with debugging
-  getUserSimilarityInsights(userScores, options = {}) {
+  async getUserSimilarityInsights(userScores, options = {}) { // ✅ Add async
     try {
-      const allProfiles = this.dataManager.getProfiles();
+      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
 
       console.log('🔍 Getting similarity insights for user scores:', userScores);
       console.log('📊 Total profiles available:', allProfiles.length);
@@ -612,7 +612,7 @@ export class MLService {
   }
 
   // Get recommendation insights and explanations
-  getRecommendationInsights(userScores, recommendations) {
+  async getRecommendationInsights(userScores, recommendations) { // ✅ Add async
     try {
       console.log('🔍 Getting recommendation insights for:', userScores);
       console.log('📋 Recommendations received:', recommendations);
@@ -1132,8 +1132,8 @@ export class MLService {
 
   async findSimilarProfiles(userScores, options = {}) {
     try {
-      const { minSimilarity = 0.5, limit = 10 } = options; // Lowered threshold for better matching
-
+      // ...
+      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
       console.log(`🔍 Finding similar profiles with threshold ${minSimilarity}, limit ${limit}`);
       console.log(`👤 User scores:`, userScores);
 
