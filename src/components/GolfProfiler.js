@@ -982,20 +982,20 @@ const GolfProfiler = () => {
               <Brain size={12} className="mr-1" />
               ML-Enhanced Question Selection
             </div>
-            {mlStats?.model?.confidence && (
+            {mlStats?.model?.confidence !== undefined && (
               <div className="flex items-center text-blue-600">
                 <Zap size={12} className="mr-1" />
-                Model Confidence: {mlStats.model.confidence.toFixed(1)}
+                Model Confidence: {typeof mlStats.model.confidence === 'number'
+                  ? mlStats.model.confidence.toFixed(1)
+                  : 'Loading...'}
               </div>
             )}
           </div>
         </div>
-
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
             {currentQ.question}
           </h2>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentQ.options.map((option, index) => (
               <button
@@ -1014,7 +1014,6 @@ const GolfProfiler = () => {
             ))}
           </div>
         </div>
-
         {/* Progress Info */}
         <div className="text-center text-sm text-gray-500">
           <div className="flex items-center justify-center gap-4">
@@ -1022,11 +1021,10 @@ const GolfProfiler = () => {
             {mlStats?.data?.totalProfiles > 0 && (
               <span className="flex items-center">
                 <Users size={12} className="mr-1" />
-                Learning from {mlStats.data.totalProfiles} golfers
+                Learning from {mlStats?.data?.totalProfiles} golfers
               </span>
             )}
           </div>
-
           {Object.keys(answers).length > 0 && (
             <button
               onClick={restart}
