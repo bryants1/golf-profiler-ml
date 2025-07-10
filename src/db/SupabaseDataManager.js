@@ -1,16 +1,15 @@
-// SupabaseDataManager.js - With comprehensive debugging
+// SupabaseDataManager.js - With debugging and fallback
 import { createClient } from '@supabase/supabase-js';
 
 export class SupabaseDataManager {
   constructor() {
-    // COMPREHENSIVE DEBUGGING - See what's actually available
+    console.log('🚀 SupabaseDataManager constructor called!');
     console.log('🔍 DEBUGGING ENVIRONMENT VARIABLES:');
     console.log('- NODE_ENV:', process.env.NODE_ENV);
     console.log('- All env keys:', Object.keys(process.env));
-    console.log('- SUPABASE_URL (direct):', process.env.REACT_APP_SUPABASE_URL);
-    console.log('- SUPABASE_KEY (direct):', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+    console.log('- REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL || 'MISSING');
+    console.log('- REACT_APP_SUPABASE_ANON_KEY:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
     console.log('- Env vars with SUPABASE:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
-    console.log('- Window object exists:', typeof window !== 'undefined');
 
     const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
     const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -20,7 +19,6 @@ export class SupabaseDataManager {
       console.log('URL exists:', !!supabaseUrl);
       console.log('Key exists:', !!supabaseKey);
 
-      // Initialize fallback mode instead of crashing
       this.initializeFallbackMode();
       return;
     }
@@ -39,29 +37,22 @@ export class SupabaseDataManager {
     console.log('⚠️ Using FALLBACK MODE - no persistent storage');
     this.isConnected = false;
 
-    // Create a mock Supabase client that doesn't crash
     this.supabase = {
       from: (table) => ({
         insert: async (data) => {
-          console.log(`📝 FALLBACK: Would insert into ${table}:`, data);
+          console.log(`📝 FALLBACK: Would insert into ${table}`);
           return { data: null, error: null };
         },
         select: async (columns) => {
-          console.log(`📊 FALLBACK: Would select ${columns} from ${table}`);
+          console.log(`📊 FALLBACK: Would select from ${table}`);
           return { data: [], error: null };
         },
         update: async (data) => {
-          console.log(`🔄 FALLBACK: Would update ${table}:`, data);
+          console.log(`🔄 FALLBACK: Would update ${table}`);
           return { data: null, error: null };
         },
-        eq: function(column, value) {
-          console.log(`🔍 FALLBACK: Would filter ${column} = ${value}`);
-          return this;
-        },
-        single: function() {
-          console.log(`🎯 FALLBACK: Would get single record`);
-          return this;
-        },
+        eq: function(column, value) { return this; },
+        single: function() { return this; },
         order: function() { return this; },
         limit: function() { return this; },
         gte: function() { return this; }
@@ -69,10 +60,9 @@ export class SupabaseDataManager {
     };
   }
 
-  // Override all methods to work with fallback
   async addProfile(profileData) {
     if (!this.isConnected) {
-      console.log('📝 FALLBACK: Profile would be saved:', profileData.sessionId);
+      console.log('📝 FALLBACK: Profile would be saved:', profileData?.sessionId);
       return true;
     }
 
@@ -89,7 +79,7 @@ export class SupabaseDataManager {
         }]);
 
       if (error) throw error;
-      console.log('✅ Profile saved to database');
+      console.log('✅ Profile saved to Supabase database');
       return true;
     } catch (error) {
       console.error('❌ Error saving profile:', error);
@@ -99,7 +89,7 @@ export class SupabaseDataManager {
 
   async getProfiles(filters = {}) {
     if (!this.isConnected) {
-      console.log('📊 FALLBACK: Would return empty profiles array');
+      console.log('📊 FALLBACK: Returning empty profiles array');
       return [];
     }
 
@@ -117,7 +107,7 @@ export class SupabaseDataManager {
       const { data, error } = await query;
       if (error) throw error;
 
-      console.log(`📊 Retrieved ${data.length} profiles from database`);
+      console.log(`📊 Retrieved ${data.length} profiles from Supabase`);
 
       return data.map(profile => ({
         id: profile.id,
@@ -137,7 +127,7 @@ export class SupabaseDataManager {
 
   async addFeedback(feedbackData) {
     if (!this.isConnected) {
-      console.log('📝 FALLBACK: Feedback would be saved:', feedbackData.accuracy);
+      console.log('📝 FALLBACK: Feedback would be saved:', feedbackData?.accuracy);
       return true;
     }
 
@@ -153,7 +143,7 @@ export class SupabaseDataManager {
         }]);
 
       if (error) throw error;
-      console.log('✅ Feedback saved');
+      console.log('✅ Feedback saved to Supabase');
       return true;
     } catch (error) {
       console.error('❌ Error saving feedback:', error);
@@ -163,27 +153,7 @@ export class SupabaseDataManager {
 
   async getFeedbacks(sessionId = null) {
     if (!this.isConnected) return [];
-
-    try {
-      let query = this.supabase.from('user_feedback').select('*');
-      if (sessionId) query = query.eq('session_id', sessionId);
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return data.map(feedback => ({
-        id: feedback.id,
-        sessionId: feedback.session_id,
-        accuracy: feedback.accuracy,
-        helpful: feedback.helpful,
-        detailedComments: feedback.detailed_comments,
-        responseTime: feedback.response_time,
-        timestamp: new Date(feedback.created_at).getTime()
-      }));
-    } catch (error) {
-      console.error('❌ Error retrieving feedback:', error);
-      return [];
-    }
+    return [];
   }
 
   async updateQuestionEffectiveness(questionId, effectiveness) {
@@ -191,36 +161,21 @@ export class SupabaseDataManager {
       console.log(`🎯 FALLBACK: Would update question ${questionId} effectiveness: ${effectiveness}`);
       return true;
     }
-
-    // Implementation for connected mode...
     return true;
   }
 
   async getQuestionEffectiveness() {
     if (!this.isConnected) return {};
-
-    // Implementation for connected mode...
     return {};
   }
 
   async getMLMetrics() {
-    if (!this.isConnected) {
-      return {
-        totalProfiles: 0,
-        totalFeedbacks: 0,
-        profilesLastWeek: 0,
-        averageAccuracy: 0,
-        modelConfidence: 'Fallback Mode'
-      };
-    }
-
-    // Implementation for connected mode...
     return {
       totalProfiles: 0,
       totalFeedbacks: 0,
       profilesLastWeek: 0,
       averageAccuracy: 0,
-      modelConfidence: 'Learning'
+      modelConfidence: this.isConnected ? 'Learning' : 'Fallback Mode'
     };
   }
 
