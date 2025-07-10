@@ -16,10 +16,10 @@ export class MLService {
 
     // Initialize core components
     this.dataManager = new SupabaseDataManager();
-    this.similarityCalculator = new SimilarityCalculator(); // From SimilarityCalculator.js
-    this.questionSelector = new EnhancedQuestionSelector(this.dataManager); // From FixedMLSystem.js
-    this.feedbackCollector = new FeedbackCollector(this.dataManager); // From FeedbackCollector.js
-    this.recommendationEngine = new RecommendationEngine(this.similarityCalculator, this.dataManager); // From RecommendationEngine.js
+    this.similarityCalculator = new SimilarityCalculator();
+    this.questionSelector = new EnhancedQuestionSelector(this.dataManager);
+    this.feedbackCollector = new FeedbackCollector(this.dataManager);
+    this.recommendationEngine = new RecommendationEngine(this.similarityCalculator, this.dataManager);
 
     // Configuration
     this.config = null;
@@ -34,10 +34,19 @@ export class MLService {
       lastUpdated: Date.now()
     };
 
+    // ✅ ADD THESE LINES:
+    // Verify all methods exist
+    console.log('🔍 Method checks:', {
+      hasGetMLStatistics: typeof this.getMLStatistics === 'function',
+      hasGetUserSimilarityInsights: typeof this.getUserSimilarityInsights === 'function',
+      hasSelectNextQuestion: typeof this.selectNextQuestion === 'function',
+      hasGenerateProfile: typeof this.generateProfile === 'function'
+    });
+
+    console.log('🚀 Starting MLService initialization...');
     // Initialize the service
     this.initialize();
   }
-
   async initialize() {
     if (this.isInitialized) return;
 
@@ -697,55 +706,6 @@ export class MLService {
     }
   }
 
-  // Add method existence check to constructor
-  constructor(options = {}) {
-    console.log('🏗️ MLService constructor starting...');
-
-    // Store options for later
-    this.options = options;
-
-    // Initialize core components
-    this.dataManager = new SupabaseDataManager();
-    console.log('✅ SupabaseDataManager created');
-
-    this.similarityCalculator = new SimilarityCalculator();
-    console.log('✅ SimilarityCalculator created');
-
-    this.questionSelector = new EnhancedQuestionSelector(this.dataManager);
-    console.log('✅ EnhancedQuestionSelector created:', !!this.questionSelector);
-
-    this.feedbackCollector = new FeedbackCollector(this.dataManager);
-    console.log('✅ FeedbackCollector created');
-
-    this.recommendationEngine = new RecommendationEngine(this.similarityCalculator, this.dataManager);
-    console.log('✅ RecommendationEngine created');
-
-    // Configuration
-    this.config = null;
-    this.isInitialized = false;
-    this.modelVersion = '1.0.0';
-
-    // Performance tracking
-    this.performanceMetrics = {
-      profilesGenerated: 0,
-      averageAccuracy: 0,
-      totalFeedbacks: 0,
-      lastUpdated: Date.now()
-    };
-
-    // Verify all methods exist
-    console.log('🔍 Method checks:', {
-      hasGetMLStatistics: typeof this.getMLStatistics === 'function',
-      hasGetUserSimilarityInsights: typeof this.getUserSimilarityInsights === 'function',
-      hasSelectNextQuestion: typeof this.selectNextQuestion === 'function',
-      hasGenerateProfile: typeof this.generateProfile === 'function'
-    });
-
-    console.log('🚀 Starting MLService initialization...');
-    // Initialize the service
-    this.initialize();
-  }
-  
   // Override similarity finding to ensure ML enhancement works
   async findSimilarProfilesForML(userScores) { // ✅ Add async
     try {
