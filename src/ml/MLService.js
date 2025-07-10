@@ -1,7 +1,8 @@
 // MLService.js - Updated to work with your original classes but use memory-based data storage
 
 // Import your original sophisticated classes FIRST
-import { MemoryDataManager, EnhancedQuestionSelector } from './FixedMLSystem.js';
+import { SupabaseDataManager } from './SupabaseDataManager.js';
+import { EnhancedQuestionSelector } from './FixedMLSystem.js';
 import { SimilarityCalculator } from './SimilarityCalculator.js';
 import { FeedbackCollector } from './FeedbackCollector.js';
 import { RecommendationEngine } from './RecommendationEngine.js';
@@ -14,7 +15,7 @@ export class MLService {
     this.options = options;
 
     // Initialize core components
-    this.dataManager = new MemoryDataManager(); // From FixedMLSystem.js
+    this.dataManager = new SupabaseDataManager();
     this.similarityCalculator = new SimilarityCalculator(); // From SimilarityCalculator.js
     this.questionSelector = new EnhancedQuestionSelector(this.dataManager); // From FixedMLSystem.js
     this.feedbackCollector = new FeedbackCollector(this.dataManager); // From FeedbackCollector.js
