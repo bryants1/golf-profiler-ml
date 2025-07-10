@@ -87,7 +87,7 @@ export class SupabaseDataManager {
     }
   }
 
-  async async getProfiles(filters = {}) {
+  async getProfiles(filters = {}) {
     if (!this.isConnected) {
       console.log('📊 FALLBACK: Returning empty profiles array');
       return []; // Always return array
