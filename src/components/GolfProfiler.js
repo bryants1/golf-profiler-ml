@@ -598,14 +598,16 @@ const GolfProfiler = () => {
                   </span>
                 </div>
               )}
-              {mlStats && (
-                <div className="flex items-center">
-                  <Zap className="text-blue-600 mr-2" size={16} />
-                  <span className="text-sm text-blue-600">
-                    Model: {mlStats.model.confidence.toFixed(1)} confidence
-                  </span>
-                </div>
-              )}
+              {mlStats?.model?.confidence !== undefined && (
+              <div className="flex items-center">
+                <Zap className="text-blue-600 mr-2" size={16} />
+                <span className="text-sm text-blue-600">
+                  Model: {typeof mlStats.model.confidence === 'number'
+                    ? mlStats.model.confidence.toFixed(1)
+                    : 'Loading...'} confidence
+                </span>
+              </div>
+            )}
             </div>
           </div>
 
