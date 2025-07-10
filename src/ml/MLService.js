@@ -313,8 +313,6 @@ export class MLService {
 
   return feedbacks; // ✅ Return OUTSIDE the loop
 }
-    return feedbacks;
-  }
 
   generateCourseStyle() {
     const styles = ['parkland', 'links', 'coastal', 'desert', 'mountain'];
