@@ -365,7 +365,7 @@ export class MLService {
       console.error('❌ Error testing ML enhancement:', error);
     }
   }
-  
+
   // Load performance metrics from storage (like original)
   async loadPerformanceMetrics() {
     try {
@@ -473,7 +473,7 @@ export class MLService {
   // Get enhanced recommendations for existing profile
   async getEnhancedRecommendations(currentScores, currentProfile, options = {}) {
     try {
-      const similarProfiles = this.findSimilarProfilesForML(currentScores);
+      const similarProfiles = await this.findSimilarProfilesForML(currentScores);
 
       if (similarProfiles.length >= ML_CONFIG.MIN_SIMILAR_PROFILES) {
         // Use the sophisticated RecommendationEngine
@@ -564,13 +564,13 @@ export class MLService {
   }
 
   // Override similarity finding to ensure ML enhancement works
-  findSimilarProfilesForML(userScores) {
+  async findSimilarProfilesForML(userScores) { // ✅ Add async
     try {
-      const allProfiles = this.dataManager.getProfiles();
+      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
       console.log(`🔍 Looking for similar profiles among ${allProfiles.length} total profiles`);
 
       // Try multiple thresholds to ensure we get enough similar profiles
-      const thresholds = [0.6, 0.5, 0.4, 0.3]; // Lowered thresholds for better matching
+      const thresholds = [0.6, 0.5, 0.4, 0.3];
 
       for (const threshold of thresholds) {
         const similarProfiles = this.similarityCalculator.findSimilarProfiles(
@@ -583,7 +583,6 @@ export class MLService {
 
         if (similarProfiles.length >= 3) {
           console.log(`✅ Using threshold ${threshold} with ${similarProfiles.length} similar profiles`);
-          // Show player types found
           const types = similarProfiles.map(p => p.profile?.playerType).filter(t => t);
           console.log(`🎯 Player types found: ${[...new Set(types)].join(', ')}`);
           return similarProfiles;
@@ -618,7 +617,7 @@ export class MLService {
       console.log('🔍 Getting recommendation insights for:', userScores);
       console.log('📋 Recommendations received:', recommendations);
 
-      const similarProfiles = this.findSimilarProfilesForML(userScores);
+      const similarProfiles = await this.findSimilarProfilesForML(userScores);
 
       // Handle case where recommendations might be undefined
       const safeRecommendations = recommendations || {};
@@ -872,7 +871,7 @@ export class MLService {
       console.log('📊 Available profiles for similarity:', this.getDataManagerMetrics().totalProfiles);
 
       // Try to get similar profiles for ML enhancement
-      const similarProfiles = this.findSimilarProfilesForML(scores);
+      const similarProfiles = await this.findSimilarProfilesForML(scores);
 
       if (similarProfiles.length >= 3) {
         // Generate ML-enhanced profile
@@ -1042,12 +1041,12 @@ export class MLService {
   }
 
   // Helper method to safely get metrics from data manager
-  getDataManagerMetrics() {
+  async getDataManagerMetrics() { // ✅ Make it async
     if (this.dataManager.getMLMetrics) {
-      return this.dataManager.getMLMetrics();
+      return await this.dataManager.getMLMetrics(); // ✅ Add await if needed
     } else {
       // Fallback metrics
-      const profiles = this.dataManager.getProfiles ? this.dataManager.getProfiles() : [];
+      const profiles = this.dataManager.getProfiles ? await this.dataManager.getProfiles() : []; // ✅ Add await
       return {
         totalProfiles: profiles.length,
         totalFeedbacks: 0,
