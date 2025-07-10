@@ -515,60 +515,28 @@ export class MLService {
     }
   }
 
+  // Add these methods to your MLService class
+
   async getMLStatistics() {
-    try {
-      console.log('📊 Getting ML statistics...');
+    console.log('🔍 getMLStatistics called, stack trace:');
+    console.trace(); // This will show you exactly where it's being called from
 
-      const dataMetrics = await this.getDataManagerMetrics();
-      console.log('✅ Got data metrics:', dataMetrics);
-
-      const modelConfidence = await this.calculateModelConfidence();
-      console.log('✅ Got model confidence:', modelConfidence);
-
-      // FeedbackCollector has collectProfileFeedback, addFeedback methods, but no getFeedbackAnalytics
-      const feedbackAnalytics = {
-        totalFeedbacks: dataMetrics.totalFeedbacks || 0,
-        averageRating: 0.75,
-        recentTrend: 'stable'
-      };
-
-      // EnhancedQuestionSelector has selectNextQuestion method, but no getQuestionAnalytics
-      const questionAnalytics = {
-        totalQuestions: 8,
-        averageEffectiveness: 0.75,
-        selectionVariety: 'high'
-      };
-
-      const result = {
-        model: {
-          version: this.modelVersion,
-          initialized: this.isInitialized,
-          confidence: modelConfidence
-        },
-        data: dataMetrics,
-        feedback: feedbackAnalytics,
-        questions: questionAnalytics,
-        performance: this.performanceMetrics
-      };
-
-      console.log('✅ ML statistics generated successfully:', result);
-      return result;
-
-    } catch (error) {
-      console.error('❌ Error getting ML statistics:', error);
-
-      // Return a safe fallback object
+    if (!this.isInitialized) {
+      console.warn('⚠️ MLService not initialized, returning basic stats');
       return {
         model: {
           version: this.modelVersion || '1.0.0',
-          initialized: this.isInitialized || false,
-          confidence: 0.5 // Safe fallback
+          initialized: false,
+          confidence: 0.3 // Return number, not string
         },
         data: {
           totalProfiles: 0,
           totalFeedbacks: 0,
           averageQuestions: 6,
-          averageAccuracy: 0.75
+          averageAccuracy: 0.75,
+          profilesLastWeek: 0,
+          feedbackDistribution: {},
+          modelConfidence: 'Learning'
         },
         feedback: {
           totalFeedbacks: 0,
@@ -588,46 +556,6 @@ export class MLService {
         }
       };
     }
-  }
-
-  async getMLStatistics() {
-    console.log('🔍 getMLStatistics called, stack trace:');
-    console.trace(); // This will show you exactly where it's being called from
-    if (!this.isInitialized) {
-      console.warn('⚠️ MLService not initialized, returning basic stats');
-      return {
-        model: {
-          version: this.modelVersion,
-          initialized: false,
-          confidence: 'Not Ready'
-        },
-        data: { totalProfiles: 0, totalFeedbacks: 0 },
-        feedback: { totalFeedbacks: 0 },
-        questions: { totalQuestions: 0 },
-        performance: this.performanceMetrics
-      };
-    }
-
-    // ... rest of method
-  }
-  async getMLStatistics() {
-    console.log('🔍 getMLStatistics called, stack trace:');
-    console.trace(); // This will show you exactly where it's being called from
-
-    if (!this.isInitialized) {
-      console.warn('⚠️ MLService not initialized, returning basic stats');
-      return {
-        model: {
-          version: this.modelVersion,
-          initialized: false,
-          confidence: 'Not Ready'
-        },
-        data: { totalProfiles: 0, totalFeedbacks: 0 },
-        feedback: { totalFeedbacks: 0 },
-        questions: { totalQuestions: 0 },
-        performance: this.performanceMetrics
-      };
-    }
 
     try {
       console.log('📊 Getting ML statistics...');
@@ -656,7 +584,7 @@ export class MLService {
         model: {
           version: this.modelVersion,
           initialized: this.isInitialized,
-          confidence: modelConfidence
+          confidence: modelConfidence || 0.5 // Ensure it's always a number
         },
         data: dataMetrics,
         feedback: feedbackAnalytics,
@@ -676,7 +604,7 @@ export class MLService {
         model: {
           version: this.modelVersion || '1.0.0',
           initialized: this.isInitialized || false,
-          confidence: 0.5 // Safe fallback number instead of string
+          confidence: 0.5 // Safe fallback number
         },
         data: {
           totalProfiles: 0,
@@ -706,6 +634,118 @@ export class MLService {
       };
     }
   }
+
+  // Get user similarity insights - with debugging and error handling
+  async getUserSimilarityInsights(userScores, options = {}) {
+    console.log('🔍 getUserSimilarityInsights called with:', { userScores, options });
+
+    // Add method existence check
+    if (!this.isInitialized) {
+      console.warn('⚠️ MLService not initialized for similarity insights');
+      return {
+        similarUsers: 0,
+        averageSimilarity: 0,
+        topMatches: [],
+        userPercentiles: {}
+      };
+    }
+
+    try {
+      console.log('📊 Getting similarity insights...');
+
+      const allProfiles = await this.dataManager.getProfiles();
+      console.log('🔍 Getting similarity insights for user scores:', userScores);
+      console.log('📊 Total profiles available:', allProfiles.length);
+
+      // Use a lower threshold to ensure we get similar profiles
+      const lowerThreshold = options.threshold || 0.5; // Lower from default 0.7
+
+      const similarProfiles = this.similarityCalculator.findSimilarProfiles(
+        userScores,
+        allProfiles,
+        { ...options, threshold: lowerThreshold }
+      );
+
+      console.log(`🔍 Found ${similarProfiles.length} similar profiles with threshold ${lowerThreshold}`);
+
+      const result = {
+        similarUsers: similarProfiles.length,
+        averageSimilarity: similarProfiles.length > 0
+          ? similarProfiles.reduce((sum, p) => sum + p.similarity, 0) / similarProfiles.length
+          : 0,
+        topMatches: similarProfiles.slice(0, 5).map(p => ({
+          similarity: p.similarity,
+          keyDimensions: this.identifyKeyMatchingDimensions(userScores, p.scores)
+        })),
+        userPercentiles: this.calculateUserPercentiles(userScores, allProfiles)
+      };
+
+      console.log('✅ Similarity insights generated:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error getting similarity insights:', error);
+      console.error('❌ Error stack:', error.stack);
+
+      // Return safe fallback
+      return {
+        similarUsers: 0,
+        averageSimilarity: 0,
+        topMatches: [],
+        userPercentiles: {}
+      };
+    }
+  }
+
+  // Add method existence check to constructor
+  constructor(options = {}) {
+    console.log('🏗️ MLService constructor starting...');
+
+    // Store options for later
+    this.options = options;
+
+    // Initialize core components
+    this.dataManager = new SupabaseDataManager();
+    console.log('✅ SupabaseDataManager created');
+
+    this.similarityCalculator = new SimilarityCalculator();
+    console.log('✅ SimilarityCalculator created');
+
+    this.questionSelector = new EnhancedQuestionSelector(this.dataManager);
+    console.log('✅ EnhancedQuestionSelector created:', !!this.questionSelector);
+
+    this.feedbackCollector = new FeedbackCollector(this.dataManager);
+    console.log('✅ FeedbackCollector created');
+
+    this.recommendationEngine = new RecommendationEngine(this.similarityCalculator, this.dataManager);
+    console.log('✅ RecommendationEngine created');
+
+    // Configuration
+    this.config = null;
+    this.isInitialized = false;
+    this.modelVersion = '1.0.0';
+
+    // Performance tracking
+    this.performanceMetrics = {
+      profilesGenerated: 0,
+      averageAccuracy: 0,
+      totalFeedbacks: 0,
+      lastUpdated: Date.now()
+    };
+
+    // Verify all methods exist
+    console.log('🔍 Method checks:', {
+      hasGetMLStatistics: typeof this.getMLStatistics === 'function',
+      hasGetUserSimilarityInsights: typeof this.getUserSimilarityInsights === 'function',
+      hasSelectNextQuestion: typeof this.selectNextQuestion === 'function',
+      hasGenerateProfile: typeof this.generateProfile === 'function'
+    });
+
+    console.log('🚀 Starting MLService initialization...');
+    // Initialize the service
+    this.initialize();
+  }
+  
   // Override similarity finding to ensure ML enhancement works
   async findSimilarProfilesForML(userScores) { // ✅ Add async
     try {
