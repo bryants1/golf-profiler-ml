@@ -29,17 +29,7 @@ if (typeof window !== 'undefined') {
 }
 
 const GolfProfiler = () => {
-  // 🔥 ADMIN URL CHECK - Add this at the very beginning!
-  const urlParams = new URLSearchParams(window.location.search);
-  const isAdmin = urlParams.get('admin') === 'true';
-
-  // If admin mode, show admin interface instead
-  if (isAdmin) {
-    console.log('🔧 Admin mode detected - showing admin interface');
-    return <MLAdminInterface mlService={new MLService()} />;
-  }
-
-  // Regular Golf Profiler code continues here...
+  // 🔥 DECLARE ALL HOOKS FIRST (React requirement)
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [profile, setProfile] = useState(null);
@@ -68,6 +58,20 @@ const GolfProfiler = () => {
     courseStyle: {}, pace: 0
   });
 
+  // 🔥 NOW CHECK FOR ADMIN MODE (after all hooks)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdmin = urlParams.get('admin') === 'true';
+
+  // If admin mode, show admin interface
+  if (isAdmin) {
+    console.log('🔧 Admin mode detected - showing admin interface');
+    return <MLAdminInterface mlService={mlService} />;
+  }
+
+  // Continue with your existing useEffect and component code...
+  useEffect(() => {
+    // your existing useEffect code
+  }, []);
 
   // Question bank
   const questionBank = [
