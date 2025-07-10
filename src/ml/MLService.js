@@ -825,6 +825,172 @@ export class MLService {
     }
   }
 
+  // MLService.js - Fixed to return complete profile structure
+
+  // Add this method to your MLService class:
+
+  generateCompleteProfile(userScores) {
+    console.log('🎯 Generating complete profile for scores:', userScores);
+
+    // Generate skill level
+    const skillLevel = {
+      numeric: userScores.skillLevel || 0,
+      label: this.getSkillLabel(userScores.skillLevel || 0),
+      confidence: 'Medium'
+    };
+
+    // Generate personality type
+    const personality = {
+      primary: this.getPersonalityType(userScores),
+      secondary: [],
+      confidence: 'Medium'
+    };
+
+    // Generate preferences
+    const preferences = {
+      core: this.getPreferences(userScores)
+    };
+
+    // Generate recommendations
+    const recommendations = this.getDefaultRecommendations(userScores);
+
+    // Generate demographics
+    const demographics = this.getDemographics(userScores);
+
+    const completeProfile = {
+      skillLevel,
+      personality,
+      preferences,
+      recommendations,
+      demographics,
+      mlEnhanced: false,
+      enhancementLevel: 'basic',
+      source: 'Default Algorithm'
+    };
+
+    console.log('✅ Complete profile generated:', completeProfile);
+    return completeProfile;
+  }
+
+  // Update the generateProfile method:
+  async generateProfile(answers, scores, sessionId, options = {}) {
+    if (!this.isInitialized) {
+      console.warn('MLService not initialized, using basic profile generation');
+      return this.generateCompleteProfile(scores); // Changed this line
+    }
+
+    try {
+      this.performanceMetrics.profilesGenerated++;
+
+      console.log('🎯 Generating profile with user scores:', scores);
+      console.log('📊 Available profiles for similarity:', this.getDataManagerMetrics().totalProfiles);
+
+      // Try to get similar profiles for ML enhancement
+      const similarProfiles = this.findSimilarProfilesForML(scores);
+
+      if (similarProfiles.length >= 3) {
+        // Generate ML-enhanced profile
+        const enhancedProfile = await this.generateEnhancedProfile(scores, similarProfiles);
+        await this.addProfileData(answers, scores, enhancedProfile, sessionId);
+        this.updatePerformanceMetrics();
+        return enhancedProfile;
+      } else {
+        // Generate basic but complete profile
+        const basicProfile = this.generateCompleteProfile(scores);
+        await this.addProfileData(answers, scores, basicProfile, sessionId);
+        this.updatePerformanceMetrics();
+        return basicProfile;
+      }
+
+    } catch (error) {
+      console.error('❌ Error generating profile:', error);
+      return this.generateCompleteProfile(scores); // Changed this line too
+    }
+  }
+
+  // Add this new method for ML-enhanced profiles:
+  async generateEnhancedProfile(userScores, similarProfiles) {
+    console.log('🤖 Generating ML-enhanced profile');
+
+    // Start with basic profile structure
+    const baseProfile = this.generateCompleteProfile(userScores);
+
+    // Enhance with ML recommendations
+    const currentProfile = { recommendations: baseProfile.recommendations };
+    const enhancedRecommendations = this.recommendationEngine.generateEnhancedRecommendations(
+      userScores,
+      currentProfile,
+      similarProfiles
+    );
+
+    // Enhance personality insights
+    const enhancedPersonality = {
+      ...baseProfile.personality,
+      mlInsights: {
+        similarUserCount: similarProfiles.length,
+        confidence: similarProfiles.length >= 10 ? 'High' : 'Medium',
+        personalityPatterns: {
+          insights: `Enhanced based on ${similarProfiles.length} similar golfers`
+        }
+      }
+    };
+
+    return {
+      ...baseProfile,
+      personality: enhancedPersonality,
+      recommendations: enhancedRecommendations,
+      mlEnhanced: true,
+      enhancementLevel: 'full',
+      mlMetadata: {
+        similarProfiles: similarProfiles.length,
+        confidence: this.calculateModelConfidence(),
+        dataQuality: similarProfiles.length >= 10 ? 'High' : 'Medium'
+      }
+    };
+  }
+
+  // Helper methods (add these to your MLService class):
+  getSkillLabel(skillScore) {
+    if (skillScore <= 2) return "New to Golf";
+    if (skillScore <= 4) return "Recreational Player";
+    if (skillScore <= 6) return "Regular Golfer";
+    if (skillScore <= 8) return "Serious Player";
+    return "Advanced Golfer";
+  }
+
+  getPersonalityType(scores) {
+    if (scores.socialness >= 7 && scores.competitiveness <= 4) return "Social & Fun-Focused";
+    if (scores.competitiveness >= 7 && scores.traditionalism >= 6) return "Competitive Traditionalist";
+    if (scores.socialness >= 7 && scores.luxuryLevel >= 6) return "Social Luxury Seeker";
+    if (scores.competitiveness <= 3 && scores.socialness <= 4) return "Peaceful Solo Player";
+    if (scores.traditionalism >= 8) return "Golf Purist";
+    return "Balanced Enthusiast";
+  }
+
+  getPreferences(scores) {
+    const prefs = [];
+    if (scores.amenityImportance >= 6) prefs.push("Values practice facilities & amenities");
+    if (scores.luxuryLevel >= 7) prefs.push("Prefers upscale experiences");
+    if (scores.socialness >= 7) prefs.push("Enjoys group golf & social aspects");
+    if (scores.competitiveness >= 7) prefs.push("Competitive & score-focused");
+    if (scores.traditionalism >= 7) prefs.push("Appreciates golf history & tradition");
+    return prefs;
+  }
+
+  getDemographics(scores) {
+    const ageGuess = scores.ageGeneration <= 3 ? "25-40" :
+                     scores.ageGeneration <= 6 ? "35-55" : "45-65";
+    const genderLean = Math.abs(scores.genderLean) <= 1 ? "Neutral preferences" :
+                       scores.genderLean > 1 ? "More traditional masculine preferences" :
+                       "More contemporary/feminine preferences";
+    return {
+      estimatedAge: ageGuess,
+      preferenceStyle: genderLean
+    };
+  }
+
+
+
   calculateModelConfidence() {
     const metrics = this.getDataManagerMetrics();
     const profileCount = metrics.totalProfiles || 0;
