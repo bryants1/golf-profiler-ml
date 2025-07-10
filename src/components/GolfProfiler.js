@@ -60,33 +60,6 @@ const GolfProfiler = () => {
     courseStyle: {}, pace: 0
   });
 
-  // 🔥 ALL useEffect HOOKS MUST ALSO BE HERE - BEFORE CONDITIONAL LOGIC
-
-  // Initialize ML service and first question
-  useEffect(() => {
-    const initializeML = async () => {
-      if (selectedQuestions.length === 0) {
-        const firstQuestion = mlService.selectNextQuestion({}, scores, questionBank, 0);
-        setSelectedQuestions([firstQuestion]);
-
-        // Load ML stats
-        const stats = mlService.getMLStatistics();
-        setMlStats(stats);
-      }
-    };
-
-    initializeML();
-  }, [mlService, scores, selectedQuestions.length]);
-
-  // 🔥 NOW CHECK FOR ADMIN MODE (after ALL hooks)
-  const urlParams = new URLSearchParams(window.location.search);
-  const isAdmin = urlParams.get('admin') === 'true';
-
-  // If admin mode, show admin interface
-  if (isAdmin) {
-    console.log('🔧 Admin mode detected - showing admin interface');
-    return <MLAdminInterface mlService={mlService} />;
-  }
 
   // Question bank
   const questionBank = [
@@ -316,6 +289,35 @@ const GolfProfiler = () => {
     }
   ];
 
+
+
+  // Initialize ML service and first question
+  useEffect(() => {
+    const initializeML = async () => {
+      if (selectedQuestions.length === 0) {
+        const firstQuestion = mlService.selectNextQuestion({}, scores, questionBank, 0);
+        setSelectedQuestions([firstQuestion]);
+
+        // Load ML stats
+        const stats = mlService.getMLStatistics();
+        setMlStats(stats);
+      }
+    };
+
+    initializeML();
+  }, [mlService, scores, selectedQuestions.length]);
+
+  // 🔥 NOW CHECK FOR ADMIN MODE (after ALL hooks)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdmin = urlParams.get('admin') === 'true';
+
+  // If admin mode, show admin interface
+  if (isAdmin) {
+    console.log('🔧 Admin mode detected - showing admin interface');
+    return <MLAdminInterface mlService={mlService} />;
+  }
+
+
   // Fixed scoring algorithm using weighted averages
   const calculateWeightedScores = (allAnswers) => {
     const dimensionScores = {
@@ -376,21 +378,6 @@ const GolfProfiler = () => {
     return finalScores;
   };
 
-  // Initialize ML service and first question
-  useEffect(() => {
-    const initializeML = async () => {
-      if (selectedQuestions.length === 0) {
-        const firstQuestion = mlService.selectNextQuestion({}, scores, questionBank, 0);
-        setSelectedQuestions([firstQuestion]);
-
-        // Load ML stats
-        const stats = mlService.getMLStatistics();
-        setMlStats(stats);
-      }
-    };
-
-    initializeML();
-  }, []);
 
   const handleAnswer = async (optionIndex) => {
     const currentQ = selectedQuestions[currentQuestion];
