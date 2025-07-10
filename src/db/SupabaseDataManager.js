@@ -7,13 +7,13 @@ export class SupabaseDataManager {
     console.log('🔍 DEBUGGING ENVIRONMENT VARIABLES:');
     console.log('- NODE_ENV:', process.env.NODE_ENV);
     console.log('- All env keys:', Object.keys(process.env));
-    console.log('- SUPABASE_URL (direct):', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('- SUPABASE_KEY (direct):', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+    console.log('- SUPABASE_URL (direct):', process.env.REACT_APP_SUPABASE_URL);
+    console.log('- SUPABASE_KEY (direct):', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
     console.log('- Env vars with SUPABASE:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
     console.log('- Window object exists:', typeof window !== 'undefined');
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ SUPABASE CREDENTIALS MISSING!');
