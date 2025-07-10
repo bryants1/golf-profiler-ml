@@ -1132,10 +1132,13 @@ export class MLService {
 
   async findSimilarProfiles(userScores, options = {}) {
     try {
-      // ...
-      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+      const { minSimilarity = 0.5, limit = 10 } = options; // ✅ Add this destructuring
+
       console.log(`🔍 Finding similar profiles with threshold ${minSimilarity}, limit ${limit}`);
       console.log(`👤 User scores:`, userScores);
+
+      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+      console.log(`📊 Total profiles available: ${allProfiles.length}`);
 
       // Debug: show sample of available profiles
       if (allProfiles.length > 0) {
@@ -1179,7 +1182,7 @@ export class MLService {
       return []; // Return empty array on error
     }
   }
-
+  
   aggregateRecommendations(similarProfiles, userScores) {
     try {
       console.log('🤖 Aggregating recommendations from similar profiles:', similarProfiles.length);
