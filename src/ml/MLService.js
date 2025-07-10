@@ -155,7 +155,8 @@ export class MLService {
         // Add small random variations to create realistic clusters
         const profile = {
           id: `quality_profile_${index}_${i}`,
-          timestamp: Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000, // Last 60 days
+          sessionId: `mock_session_${index}_${i}`, // ADD THIS LINE
+          timestamp: Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000,
           scores: {
             skillLevel: Math.max(0, Math.min(10, archetype.skill + Math.floor(Math.random() * 3) - 1)),
             socialness: Math.max(0, Math.min(10, archetype.social + Math.floor(Math.random() * 3) - 1)),
@@ -301,15 +302,13 @@ export class MLService {
 
       feedbacks.push({
         id: `quality_feedback_${i}`,
-        sessionId: `session_${i}`,
-        timestamp: Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000, // Last 2 weeks
+        sessionId: `mock_session_feedback_${i}`, // ADD THIS LINE
+        timestamp: Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000,
         accuracy: selectedAccuracy,
-        responseTime: 8000 + Math.random() * 12000, // More thoughtful responses
+        responseTime: Math.round(8000 + Math.random() * 12000), // ROUND TO INTEGER
         feedbackWeight: 0.9 + Math.random() * 0.2, // Higher quality feedback
         credibilityScore: 0.8 + Math.random() * 0.2 // More credible
-      });
-    }
-
+    });
     return feedbacks;
   }
 
