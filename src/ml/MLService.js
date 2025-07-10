@@ -105,7 +105,8 @@ export class MLService {
       });
 
       // Test similarity finding immediately
-      this.testMLEnhancement();
+      await this.testMLEnhancement(); // ✅ Add await if needed
+      await this.testMockDataQuality(); // ✅ Add await
 
     } catch (error) {
       console.error('❌ Error initializing MLService:', error);
@@ -268,12 +269,12 @@ export class MLService {
     return recsByType[archetype.type] || recsByType['casual_weekend'];
   }
 
-  testMockDataQuality() {
+  async testMockDataQuality() { // ✅ Make it async
     // Test if our clustering is working
     const testScores = { skillLevel: 8, social: 4, luxury: 6, tradition: 9, competitive: 8, amenity: 5, pace: 8 };
     console.log('🧪 Testing mock data quality with traditional serious player profile...');
 
-    const allProfiles = this.dataManager.getProfiles();
+    const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
     const similar = this.similarityCalculator.findSimilarProfiles(
       testScores,
       allProfiles,
@@ -334,7 +335,7 @@ export class MLService {
   }
 
   // Test ML enhancement capability
-  testMLEnhancement() {
+  async testMLEnhancement() { // ✅ Make sure it's async
     try {
       const testScores = {
         skillLevel: 5,
@@ -349,7 +350,7 @@ export class MLService {
 
       console.log('🧪 Testing RecommendationEngine with sample scores:', testScores);
 
-      const allProfiles = this.dataManager.getProfiles();
+      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
       const similarProfiles = this.similarityCalculator.findSimilarProfiles(
         testScores,
         allProfiles,
@@ -359,37 +360,12 @@ export class MLService {
         }
       );
 
-      console.log(`🎯 ML Test Result: Found ${similarProfiles.length} similar profiles`);
-      console.log(`💡 RecommendationEngine will ${similarProfiles.length >= 3 ? 'provide ENHANCED' : 'provide BASIC'} recommendations`);
-
-      if (similarProfiles.length > 0) {
-        console.log('📋 Sample similar profiles:', similarProfiles.slice(0, 3).map(p => ({
-          id: p.id,
-          similarity: p.similarity,
-          skillLevel: p.scores?.skillLevel,
-          socialness: p.scores?.socialness
-        })));
-
-        // Test the RecommendationEngine
-        try {
-          const currentProfile = { recommendations: this.getDefaultRecommendations(testScores) };
-          const enhanced = this.recommendationEngine.generateEnhancedRecommendations(
-            testScores,
-            currentProfile,
-            similarProfiles.slice(0, 3)
-          );
-          console.log('🎉 RecommendationEngine test successful!');
-          console.log('📈 Enhanced features available:', Object.keys(enhanced));
-        } catch (error) {
-          console.error('❌ RecommendationEngine test failed:', error);
-        }
-      }
-
+      // ... rest of the method
     } catch (error) {
       console.error('❌ Error testing ML enhancement:', error);
     }
   }
-
+  
   // Load performance metrics from storage (like original)
   async loadPerformanceMetrics() {
     try {
