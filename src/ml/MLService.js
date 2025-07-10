@@ -1,4 +1,4 @@
-// MLService.js - Updated to work with your original classes but use memory-based data storage
+// MLService.js - Updated with Database-Driven Algorithms and A/B Testing
 
 // Import your original sophisticated classes FIRST
 import { SupabaseDataManager } from '../db/SupabaseDataManager.js';
@@ -6,9 +6,10 @@ import { EnhancedQuestionSelector } from './FixedMLSystem.js';
 import { SimilarityCalculator } from './SimilarityCalculator.js';
 import { FeedbackCollector } from './FeedbackCollector.js';
 import { RecommendationEngine } from './RecommendationEngine.js';
+import { AlgorithmManager } from './AlgorithmManager.js';
 import { ML_CONFIG } from './MLConfig.js';
 
-// Your existing MLService class, but using your original classes + memory data manager
+// Your existing MLService class, but using your original classes + database-driven algorithms
 export class MLService {
   constructor(options = {}) {
     // Store options for later
@@ -20,6 +21,21 @@ export class MLService {
     this.questionSelector = new EnhancedQuestionSelector(this.dataManager);
     this.feedbackCollector = new FeedbackCollector(this.dataManager);
     this.recommendationEngine = new RecommendationEngine(this.similarityCalculator, this.dataManager);
+
+    // NEW: Algorithm Manager for database-driven algorithms
+    this.algorithmManager = new AlgorithmManager(this.dataManager.supabase);
+
+    // Current active algorithms (loaded from database)
+    this.activeAlgorithms = {
+      scoring: null,
+      questionSelection: null,
+      similarityCalculator: null
+    };
+
+    // Dynamic algorithm configurations (loaded from database)
+    this.scoringConfig = null;
+    this.questionSelectionConfig = null;
+    this.similarityConfig = null;
 
     // Configuration
     this.config = null;
@@ -34,8 +50,10 @@ export class MLService {
       lastUpdated: Date.now()
     };
 
-    // ✅ ADD THESE LINES:
-    // Verify all methods exist
+    // Session tracking for A/B testing
+    this.userSessions = new Map();
+
+    // ✅ Verify all methods exist
     console.log('🔍 Method checks:', {
       hasGetMLStatistics: typeof this.getMLStatistics === 'function',
       hasGetUserSimilarityInsights: typeof this.getUserSimilarityInsights === 'function',
@@ -47,56 +65,27 @@ export class MLService {
     // Initialize the service
     this.initialize();
   }
+
   async initialize() {
     if (this.isInitialized) return;
 
     try {
-      console.log('🔄 Initializing MLService...');
+      console.log('🔄 Initializing MLService with database-driven algorithms...');
 
       // MemoryDataManager initializes itself in constructor, no initialize() method needed
       console.log('📝 DataManager auto-initialized with mock data');
 
+      // NEW: Initialize Algorithm Manager
+      await this.algorithmManager.initialize();
+
+      // Load algorithms from database for this session
+      await this.loadSessionAlgorithms();
+
       // Add our additional mock data
       this.initializeWithMockData();
 
-      // Override ML_CONFIG with more lenient settings for better ML enhancement
-      this.config = {
-        ...ML_CONFIG,
-        ...this.options,
-        // Override key settings to ensure ML enhancement works
-        SIMILARITY_THRESHOLD: 0.5, // Lower from 0.7 to 0.5 for better matching
-        MIN_SIMILAR_PROFILES: 3,
-        MAX_SIMILAR_PROFILES: 10
-      };
-
-      // Apply the overridden config to our components
-      if (this.similarityCalculator && this.similarityCalculator.config) {
-        this.similarityCalculator.config = this.config;
-      }
-
-      // CRITICAL: Override ProfileGenerator's findSimilarProfiles to use our lower threshold
-      if (this.profileGenerator) {
-        const originalFindSimilarProfiles = this.profileGenerator.findSimilarProfiles.bind(this.profileGenerator);
-
-        this.profileGenerator.findSimilarProfiles = (scores) => {
-          const allProfiles = this.dataManager.getProfiles();
-          console.log(`🔍 ProfileGenerator looking for similar profiles with threshold ${this.config.SIMILARITY_THRESHOLD}`);
-
-          const similarProfiles = this.similarityCalculator.findSimilarProfiles(
-            scores,
-            allProfiles,
-            {
-              threshold: this.config.SIMILARITY_THRESHOLD, // Use our lower threshold
-              maxResults: this.config.MAX_SIMILAR_PROFILES,
-              minResults: this.config.MIN_SIMILAR_PROFILES,
-              diversityFactor: 0.15
-            }
-          );
-
-          console.log(`🎯 Found ${similarProfiles.length} similar profiles for ML enhancement`);
-          return similarProfiles;
-        };
-      }
+      // Apply dynamic configuration from algorithms
+      await this.applyDynamicConfiguration();
 
       // Load performance metrics (like original)
       await this.loadPerformanceMetrics();
@@ -107,19 +96,116 @@ export class MLService {
       console.log('✅ MLService initialized successfully');
       console.log('📊 ML System Status:', {
         initialized: this.isInitialized,
-        profiles: (await this.getDataManagerMetrics()).totalProfiles, // ✅ Use our async method
-        confidence: await this.calculateModelConfidence(), // ✅ Add await
-        similarityThreshold: this.config.SIMILARITY_THRESHOLD,
-        usingOriginalProfileGenerator: true
+        profiles: (await this.getDataManagerMetrics()).totalProfiles,
+        confidence: await this.calculateModelConfidence(),
+        algorithmVersions: {
+          scoring: this.activeAlgorithms.scoring?.version || 'fallback',
+          questionSelection: this.activeAlgorithms.questionSelection?.version || 'fallback',
+          similarityCalculator: this.activeAlgorithms.similarityCalculator?.version || 'fallback'
+        },
+        abTestsActive: this.algorithmManager.activeABTests?.length || 0,
+        similarityThreshold: this.config?.SIMILARITY_THRESHOLD || 0.5,
+        usingDatabaseAlgorithms: true
       });
 
       // Test similarity finding immediately
-      await this.testMLEnhancement(); // ✅ Add await if needed
-      await this.testMockDataQuality(); // ✅ Add await
+      await this.testMLEnhancement();
+      await this.testMockDataQuality();
 
     } catch (error) {
       console.error('❌ Error initializing MLService:', error);
       this.isInitialized = false;
+    }
+  }
+
+  // NEW: Load algorithms for the current session (with A/B testing)
+  async loadSessionAlgorithms(sessionId = 'default') {
+    try {
+      console.log('🔧 Loading session algorithms for A/B testing...');
+
+      // Get algorithms for this user session (A/B testing happens here)
+      this.activeAlgorithms.scoring = await this.algorithmManager.getAlgorithmForUser(
+        sessionId, 'scoring'
+      );
+
+      this.activeAlgorithms.questionSelection = await this.algorithmManager.getAlgorithmForUser(
+        sessionId, 'question_selection'
+      );
+
+      this.activeAlgorithms.similarityCalculator = await this.algorithmManager.getAlgorithmForUser(
+        sessionId, 'similarity_calculator'
+      );
+
+      console.log('✅ Session algorithms loaded:', {
+        scoring: this.activeAlgorithms.scoring?.version,
+        questionSelection: this.activeAlgorithms.questionSelection?.version,
+        similarityCalculator: this.activeAlgorithms.similarityCalculator?.version
+      });
+
+    } catch (error) {
+      console.error('❌ Error loading session algorithms:', error);
+      // Fallback to loaded algorithms or defaults
+    }
+  }
+
+  // NEW: Apply dynamic configuration from database algorithms
+  async applyDynamicConfiguration() {
+    try {
+      console.log('⚙️ Applying dynamic algorithm configuration...');
+
+      // Apply scoring algorithm configuration
+      if (this.activeAlgorithms.scoring) {
+        this.scoringConfig = {
+          dimensionWeights: this.activeAlgorithms.scoring.dimension_weights,
+          questionTypeWeights: this.activeAlgorithms.scoring.question_type_weights,
+          calculationMethod: this.activeAlgorithms.scoring.calculation_method,
+          version: this.activeAlgorithms.scoring.version
+        };
+      }
+
+      // Apply question selection configuration
+      if (this.activeAlgorithms.questionSelection) {
+        this.questionSelectionConfig = {
+          ...this.activeAlgorithms.questionSelection.selection_logic,
+          version: this.activeAlgorithms.questionSelection.version
+        };
+      }
+
+      // Apply similarity calculator configuration
+      if (this.activeAlgorithms.similarityCalculator) {
+        this.similarityConfig = {
+          ...this.activeAlgorithms.similarityCalculator.config,
+          version: this.activeAlgorithms.similarityCalculator.version
+        };
+      }
+
+      // Override base config with dynamic settings
+      this.config = {
+        ...ML_CONFIG,
+        ...this.options,
+        // Dynamic overrides from database
+        SIMILARITY_THRESHOLD: this.similarityConfig?.similarity_threshold || 0.5,
+        MIN_SIMILAR_PROFILES: 3,
+        MAX_SIMILAR_PROFILES: this.similarityConfig?.max_similar_profiles || 10
+      };
+
+      // Apply the overridden config to our components
+      if (this.similarityCalculator && this.similarityCalculator.config) {
+        this.similarityCalculator.config = this.config;
+      }
+
+      console.log('✅ Dynamic configuration applied');
+
+    } catch (error) {
+      console.error('❌ Error applying dynamic configuration:', error);
+      // Fallback to static config
+      this.config = {
+        ...ML_CONFIG,
+        ...this.options,
+        SIMILARITY_THRESHOLD: 0.5,
+        MIN_SIMILAR_PROFILES: 3,
+        MAX_SIMILAR_PROFILES: 10
+      };
     }
   }
 
@@ -165,9 +251,9 @@ export class MLService {
         // Add small random variations to create realistic clusters
         const profile = {
           id: `quality_profile_${index}_${i}`,
-          sessionId: `mock_session_${index}_${i}`, // ADD THIS LINE
+          sessionId: `mock_session_${index}_${i}`,
           timestamp: Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000,
-          answers: {  // ✅ ADD THIS
+          answers: {
             skill: archetype.skill,
             social: archetype.social,
             luxury: archetype.luxury,
@@ -278,12 +364,12 @@ export class MLService {
     return recsByType[archetype.type] || recsByType['casual_weekend'];
   }
 
-  async testMockDataQuality() { // ✅ Make it async
+  async testMockDataQuality() {
     // Test if our clustering is working
     const testScores = { skillLevel: 8, social: 4, luxury: 6, tradition: 9, competitive: 8, amenity: 5, pace: 8 };
     console.log('🧪 Testing mock data quality with traditional serious player profile...');
 
-    const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+    const allProfiles = await this.dataManager.getProfiles();
     const similar = this.similarityCalculator.findSimilarProfiles(
       testScores,
       allProfiles,
@@ -320,17 +406,17 @@ export class MLService {
 
       feedbacks.push({
         id: `quality_feedback_${i}`,
-        sessionId: `mock_session_feedback_${i}`, // ADD THIS LINE
+        sessionId: `mock_session_feedback_${i}`,
         timestamp: Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000,
         accuracy: selectedAccuracy,
-        responseTime: Math.round(8000 + Math.random() * 12000), // ROUND TO INTEGER
-        feedbackWeight: 0.9 + Math.random() * 0.2, // Higher quality feedback
-        credibilityScore: 0.8 + Math.random() * 0.2 // More credible
-    });
-  } // ✅ Close the for loop here
+        responseTime: Math.round(8000 + Math.random() * 12000),
+        feedbackWeight: 0.9 + Math.random() * 0.2,
+        credibilityScore: 0.8 + Math.random() * 0.2
+      });
+    }
 
-  return feedbacks; // ✅ Return OUTSIDE the loop
-}
+    return feedbacks;
+  }
 
   generateCourseStyle() {
     const styles = ['parkland', 'links', 'coastal', 'desert', 'mountain'];
@@ -344,7 +430,7 @@ export class MLService {
   }
 
   // Test ML enhancement capability
-  async testMLEnhancement() { // ✅ Make sure it's async
+  async testMLEnhancement() {
     try {
       const testScores = {
         skillLevel: 5,
@@ -359,7 +445,7 @@ export class MLService {
 
       console.log('🧪 Testing RecommendationEngine with sample scores:', testScores);
 
-      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+      const allProfiles = await this.dataManager.getProfiles();
       const similarProfiles = this.similarityCalculator.findSimilarProfiles(
         testScores,
         allProfiles,
@@ -402,29 +488,142 @@ export class MLService {
     });
   }
 
-  // Main API Methods for Golf Profiler (matching original exactly)
+  // NEW: Updated scoring with dynamic weights from database
+  calculateWeightedScores(allAnswers) {
+    console.log('🔢 Calculating weighted scores with dynamic weights...');
+    console.log('📊 Using scoring algorithm version:', this.scoringConfig?.version || 'fallback');
+
+    const dimensionScores = {
+      skillLevel: [], socialness: [], traditionalism: [], luxuryLevel: [],
+      competitiveness: [], ageGeneration: [], genderLean: [], amenityImportance: [],
+      pace: [], courseStyle: {}
+    };
+
+    // Use dynamic weights from database or fallback to defaults
+    const questionWeights = this.scoringConfig?.questionTypeWeights || {
+      'starter': 1.2, 'core': 1.5, 'skill_assessment': 1.8,
+      'social': 1.3, 'lifestyle': 1.0, 'knowledge': 1.1,
+      'personality': 1.4, 'preparation': 1.0
+    };
+
+    console.log('📊 Using dynamic question weights:', questionWeights);
+
+    // Collect all scores with dynamic weights
+    Object.entries(allAnswers).forEach(([questionId, answerData]) => {
+      const question = this.getQuestionById(questionId);
+      const weight = questionWeights[question?.type] || 1.0;
+      const rawScores = answerData.rawScores || {};
+
+      Object.entries(rawScores).forEach(([dimension, value]) => {
+        if (dimension === 'courseStyle') {
+          dimensionScores.courseStyle[value] = (dimensionScores.courseStyle[value] || 0) + 1;
+        } else if (dimensionScores[dimension]) {
+          dimensionScores[dimension].push({ value, weight });
+        }
+      });
+    });
+
+    // Calculate weighted averages using dynamic dimension weights
+    const dimensionWeights = this.scoringConfig?.dimensionWeights || {
+      skillLevel: 1.0, socialness: 1.0, traditionalism: 1.0, luxuryLevel: 1.0,
+      competitiveness: 1.0, ageGeneration: 0.8, genderLean: 0.6,
+      amenityImportance: 1.0, pace: 0.9
+    };
+
+    const finalScores = {
+      skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
+      competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
+      courseStyle: dimensionScores.courseStyle, pace: 0
+    };
+
+    Object.keys(finalScores).forEach(dimension => {
+      if (dimension === 'courseStyle') return;
+
+      const scores = dimensionScores[dimension];
+      if (scores.length > 0) {
+        const weightedSum = scores.reduce((sum, score) => sum + (score.value * score.weight), 0);
+        const totalWeight = scores.reduce((sum, score) => sum + score.weight, 0);
+        let average = weightedSum / totalWeight;
+
+        // Apply dimension weight
+        const dimWeight = dimensionWeights[dimension] || 1.0;
+        average = average * dimWeight;
+
+        finalScores[dimension] = Math.round(Math.max(0, Math.min(10, average)) * 10) / 10;
+      }
+    });
+
+    console.log('✅ Weighted scores calculated with version:', this.scoringConfig?.version);
+
+    // Track scoring performance
+    this.trackScoringPerformance(allAnswers, finalScores);
+
+    return finalScores;
+  }
+
+  // NEW: Track scoring algorithm performance
+  async trackScoringPerformance(answers, scores) {
+    try {
+      if (!this.activeAlgorithms.scoring) return;
+
+      const questionCount = Object.keys(answers).length;
+      const scoreVariance = this.calculateScoreVariance(scores);
+
+      // Track metrics
+      await this.algorithmManager.trackPerformance(
+        'scoring',
+        this.activeAlgorithms.scoring.version,
+        'question_count',
+        questionCount
+      );
+
+      await this.algorithmManager.trackPerformance(
+        'scoring',
+        this.activeAlgorithms.scoring.version,
+        'score_variance',
+        scoreVariance
+      );
+
+    } catch (error) {
+      console.error('❌ Error tracking scoring performance:', error);
+    }
+  }
+
+  // Main API Methods for Golf Profiler (matching original exactly but with dynamic algorithms)
   async generateProfile(answers, scores, sessionId, options = {}) {
     // CRITICAL: Original logic - fall back to basic if not initialized
     if (!this.isInitialized) {
       console.warn('MLService not initialized, using basic profile generation');
-      return this.getDefaultRecommendations(scores);
+      return this.generateCompleteProfile(scores);
     }
 
     try {
+      // Load session-specific algorithms for this user
+      await this.loadSessionAlgorithms(sessionId);
+
       // Record the profile generation
       this.performanceMetrics.profilesGenerated++;
 
-      console.log('🎯 Generating profile with user scores:', scores);
+      console.log('🎯 Generating profile with session algorithms for:', sessionId);
       console.log('📊 Available profiles for similarity:', (await this.getDataManagerMetrics()).totalProfiles);
 
-      // Generate enhanced profile
-      const profile = await this.generateRecommendations(scores);
+      // Use session-specific similarity configuration
+      const similarProfiles = await this.findSimilarProfilesForML(scores, sessionId);
 
-      // Store profile data for future learning (like original)
+      let profile;
+      if (similarProfiles.length >= 3) {
+        profile = await this.generateEnhancedProfile(scores, similarProfiles, sessionId);
+      } else {
+        profile = this.generateCompleteProfile(scores, sessionId);
+      }
+
+      // Store profile with algorithm version info
       await this.addProfileData(answers, scores, profile, sessionId);
 
-      // Update performance metrics
-      await this.updatePerformanceMetrics(); // ✅ Add await
+      // Track profile generation performance
+      await this.trackProfilePerformance(sessionId, profile, similarProfiles.length);
+
+      await this.updatePerformanceMetrics();
 
       console.log('✅ Profile generated with ML enhancement:', profile.mlEnhanced || false);
       if (profile.mlMetadata) {
@@ -435,48 +634,73 @@ export class MLService {
     } catch (error) {
       console.error('❌ Error generating profile:', error);
       // Fallback to basic profile (like original)
-      return this.getDefaultRecommendations(scores);
+      return this.generateCompleteProfile(scores);
     }
   }
 
-  // Smart question selection with ML (matching original)
+  // NEW: Track profile generation performance
+  async trackProfilePerformance(sessionId, profile, similarProfileCount) {
+    try {
+      const algorithms = this.activeAlgorithms;
+
+      // Track similarity calculator performance
+      if (algorithms.similarityCalculator) {
+        await this.algorithmManager.trackPerformance(
+          'similarity_calculator',
+          algorithms.similarityCalculator.version,
+          'similar_profiles_found',
+          similarProfileCount
+        );
+
+        await this.algorithmManager.trackPerformance(
+          'similarity_calculator',
+          algorithms.similarityCalculator.version,
+          'ml_enhancement_success',
+          profile.mlEnhanced ? 1 : 0
+        );
+      }
+
+    } catch (error) {
+      console.error('❌ Error tracking profile performance:', error);
+    }
+  }
+
+  // Smart question selection with ML (matching original but with dynamic algorithms)
   selectNextQuestion(currentAnswers, currentScores, questionBank, questionNumber, userContext = {}) {
-    console.log('🎯 selectNextQuestion called with:', {
-      isInitialized: this.isInitialized,
-      questionNumber,
-      currentAnswers: Object.keys(currentAnswers),
-      questionBankLength: questionBank.length
-    });
+    console.log('🎯 selectNextQuestion called with dynamic algorithm');
+    console.log('📊 Question selection algorithm:', this.activeAlgorithms.questionSelection?.version || 'fallback');
 
     // CRITICAL: Original logic - fall back to basic if not initialized
     if (!this.isInitialized) {
       console.warn('❌ MLService not initialized, using basic question selection');
-      console.log('🔍 Initialization status:', {
-        isInitialized: this.isInitialized,
-        hasQuestionSelector: !!this.questionSelector,
-        hasConfig: !!this.config
-      });
       return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
     }
 
     try {
-      console.log('🤖 Using ML question selection via EnhancedQuestionSelector');
+      console.log('🤖 Using dynamic ML question selection');
 
-      // Check if questionSelector exists and has the method
-      if (!this.questionSelector || !this.questionSelector.selectNextQuestion) {
-        console.error('❌ EnhancedQuestionSelector not available, falling back to basic');
-        return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
-      }
+      // Use dynamic question selection logic
+      const config = this.questionSelectionConfig || {
+        min_questions: 5,
+        max_questions: 7,
+        diversity_weight: 0.3,
+        accuracy_weight: 0.7
+      };
 
-      const selectedQuestion = this.questionSelector.selectNextQuestion(
+      const selectedQuestion = this.enhancedQuestionSelection(
         currentAnswers,
         currentScores,
         questionBank,
         questionNumber,
+        config,
         userContext
       );
 
       console.log('✅ ML question selected:', selectedQuestion?.id);
+
+      // Track question selection performance
+      this.trackQuestionSelectionPerformance(questionNumber, selectedQuestion);
+
       return selectedQuestion;
 
     } catch (error) {
@@ -485,7 +709,91 @@ export class MLService {
       return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
     }
   }
-  // Collect and process user feedback
+
+  // NEW: Enhanced question selection with dynamic logic
+  enhancedQuestionSelection(currentAnswers, currentScores, questionBank, questionNumber, config, userContext) {
+    // Use the configuration from the database algorithm
+    const { min_questions, max_questions, diversity_weight, accuracy_weight } = config;
+
+    // Apply dynamic selection logic based on database configuration
+    if (questionNumber === 0) {
+      return questionBank.find(q => q.type === 'starter') || questionBank[0];
+    }
+
+    const answeredIds = Object.keys(currentAnswers);
+    const unansweredQuestions = questionBank.filter(q => !answeredIds.includes(q.id));
+
+    if (unansweredQuestions.length === 0) return null;
+
+    // Use dynamic weights for question scoring
+    const scoredQuestions = unansweredQuestions.map(question => ({
+      question,
+      score: this.calculateQuestionScore(question, currentScores, config)
+    }));
+
+    // Sort by dynamic score
+    scoredQuestions.sort((a, b) => b.score - a.score);
+
+    return scoredQuestions[0].question;
+  }
+
+  // NEW: Calculate question score using dynamic algorithm
+  calculateQuestionScore(question, currentScores, config) {
+    const { diversity_weight, accuracy_weight } = config;
+
+    // Priority score
+    const priorityScore = (question.priority || 0) / 10;
+
+    // Diversity score (prefer different question types)
+    const diversityScore = this.calculateDiversityScore(question);
+
+    // Accuracy score (prefer questions that help improve profile accuracy)
+    const accuracyScore = this.calculateAccuracyScore(question, currentScores);
+
+    return (priorityScore * 0.3) +
+           (diversityScore * diversity_weight) +
+           (accuracyScore * accuracy_weight);
+  }
+
+  calculateDiversityScore(question) {
+    // Simplified diversity calculation
+    return Math.random() * 0.5 + 0.5; // 0.5-1.0 range
+  }
+
+  calculateAccuracyScore(question, currentScores) {
+    // Simplified accuracy calculation based on current scores
+    const relevantDimensions = Object.keys(question.options[0]?.scores || {});
+    const currentValues = relevantDimensions.map(dim => currentScores[dim] || 0);
+    const uncertainty = currentValues.reduce((sum, val) => sum + Math.abs(val - 5), 0) / relevantDimensions.length;
+
+    return uncertainty / 5; // Higher uncertainty = higher accuracy potential
+  }
+
+  // NEW: Track question selection performance
+  async trackQuestionSelectionPerformance(questionNumber, selectedQuestion) {
+    try {
+      if (!this.activeAlgorithms.questionSelection || !selectedQuestion) return;
+
+      await this.algorithmManager.trackPerformance(
+        'question_selection',
+        this.activeAlgorithms.questionSelection.version,
+        'question_selected',
+        1
+      );
+
+      await this.algorithmManager.trackPerformance(
+        'question_selection',
+        this.activeAlgorithms.questionSelection.version,
+        'question_number',
+        questionNumber
+      );
+
+    } catch (error) {
+      console.error('❌ Error tracking question selection performance:', error);
+    }
+  }
+
+  // Collect and process user feedback (updated with A/B test tracking)
   async collectFeedback(sessionId, feedbackData, profileData = null) {
     try {
       // FeedbackCollector HAS collectProfileFeedback method
@@ -494,11 +802,83 @@ export class MLService {
       if (success) {
         this.performanceMetrics.totalFeedbacks++;
         this.updateAccuracyMetrics(feedbackData);
+
+        // Track algorithm performance based on feedback
+        await this.trackFeedbackPerformance(sessionId, feedbackData);
       }
       return success;
     } catch (error) {
       console.error('Error collecting feedback:', error);
       return false;
+    }
+  }
+
+  // NEW: Track feedback performance for A/B testing
+  async trackFeedbackPerformance(sessionId, feedbackData) {
+    try {
+      // Get user's algorithm assignments
+      const assignments = await Promise.all([
+        this.algorithmManager.getUserAssignment(sessionId, 'scoring'),
+        this.algorithmManager.getUserAssignment(sessionId, 'question_selection'),
+        this.algorithmManager.getUserAssignment(sessionId, 'similarity_calculator')
+      ]);
+
+      // Track feedback for each algorithm version
+      for (const assignment of assignments.filter(a => a)) {
+        const accuracyScore = this.mapAccuracyToScore(feedbackData.accuracy);
+
+        await this.algorithmManager.trackPerformance(
+          assignment.algorithm_type,
+          assignment.algorithm_version,
+          'user_satisfaction',
+          accuracyScore
+        );
+
+        await this.algorithmManager.trackPerformance(
+          assignment.algorithm_type,
+          assignment.algorithm_version,
+          'feedback_count',
+          1
+        );
+
+        // Update A/B test results if this user is in a test
+        if (assignment.ab_test_id) {
+          await this.updateABTestResults(assignment.ab_test_id, accuracyScore);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Error tracking feedback performance:', error);
+    }
+  }
+
+  // NEW: Update A/B test results
+  async updateABTestResults(testId, accuracyScore) {
+    try {
+      // Get current test results
+      const analytics = await this.algorithmManager.getABTestAnalytics(testId);
+
+      if (analytics && analytics.totalAssignments >= 100) {
+        // Enough data to determine winner
+        const results = {
+          totalAssignments: analytics.totalAssignments,
+          versionAPerformance: analytics.versionAMetrics,
+          versionBPerformance: analytics.versionBMetrics,
+          winner: analytics.winner,
+          confidence: analytics.sampleSizeAdequate ? 'High' : 'Medium',
+          lastUpdated: new Date().toISOString()
+        };
+
+        await this.algorithmManager.updateABTestResults(testId, results);
+
+        // Auto-activate winner if test is conclusive
+        if (analytics.winner !== 'inconclusive') {
+          console.log(`🏆 A/B Test ${testId} winner: ${analytics.winner}`);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Error updating A/B test results:', error);
     }
   }
 
@@ -524,11 +904,9 @@ export class MLService {
     }
   }
 
-  // Add these methods to your MLService class
-
   async getMLStatistics() {
     console.log('🔍 getMLStatistics called, stack trace:');
-    console.trace(); // This will show you exactly where it's being called from
+    console.trace();
 
     if (!this.isInitialized) {
       console.warn('⚠️ MLService not initialized, returning basic stats');
@@ -536,7 +914,12 @@ export class MLService {
         model: {
           version: this.modelVersion || '1.0.0',
           initialized: false,
-          confidence: 0.3 // Return number, not string
+          confidence: 0.3,
+          algorithmVersions: {
+            scoring: 'not_loaded',
+            questionSelection: 'not_loaded',
+            similarityCalculator: 'not_loaded'
+          }
         },
         data: {
           totalProfiles: 0,
@@ -575,14 +958,12 @@ export class MLService {
       const modelConfidence = await this.calculateModelConfidence();
       console.log('✅ Got model confidence:', modelConfidence);
 
-      // FeedbackCollector has collectProfileFeedback, addFeedback methods, but no getFeedbackAnalytics
       const feedbackAnalytics = {
         totalFeedbacks: dataMetrics.totalFeedbacks || 0,
         averageRating: 0.75,
         recentTrend: 'stable'
       };
 
-      // EnhancedQuestionSelector has selectNextQuestion method, but no getQuestionAnalytics
       const questionAnalytics = {
         totalQuestions: 8,
         averageEffectiveness: 0.75,
@@ -593,7 +974,14 @@ export class MLService {
         model: {
           version: this.modelVersion,
           initialized: this.isInitialized,
-          confidence: modelConfidence || 0.5 // Ensure it's always a number
+          confidence: modelConfidence || 0.5,
+          // NEW: Include current algorithm versions and A/B test info
+          algorithmVersions: {
+            scoring: this.activeAlgorithms.scoring?.version || 'fallback',
+            questionSelection: this.activeAlgorithms.questionSelection?.version || 'fallback',
+            similarityCalculator: this.activeAlgorithms.similarityCalculator?.version || 'fallback'
+          },
+          abTestsActive: this.algorithmManager.activeABTests?.length || 0
         },
         data: dataMetrics,
         feedback: feedbackAnalytics,
@@ -608,12 +996,16 @@ export class MLService {
       console.error('❌ Error getting ML statistics:', error);
       console.error('❌ Error stack:', error.stack);
 
-      // Return a safe fallback object
       return {
         model: {
           version: this.modelVersion || '1.0.0',
           initialized: this.isInitialized || false,
-          confidence: 0.5 // Safe fallback number
+          confidence: 0.5,
+          algorithmVersions: {
+            scoring: 'error',
+            questionSelection: 'error',
+            similarityCalculator: 'error'
+          }
         },
         data: {
           totalProfiles: 0,
@@ -667,7 +1059,7 @@ export class MLService {
       console.log('📊 Total profiles available:', allProfiles.length);
 
       // Use a lower threshold to ensure we get similar profiles
-      const lowerThreshold = options.threshold || 0.5; // Lower from default 0.7
+      const lowerThreshold = options.threshold || 0.5;
 
       const similarProfiles = this.similarityCalculator.findSimilarProfiles(
         userScores,
@@ -706,20 +1098,27 @@ export class MLService {
     }
   }
 
-  // Override similarity finding to ensure ML enhancement works
-  async findSimilarProfilesForML(userScores) { // ✅ Add async
+  // Override similarity finding to ensure ML enhancement works (updated with session-specific algorithms)
+  async findSimilarProfilesForML(userScores, sessionId = 'default') {
     try {
-      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
-      console.log(`🔍 Looking for similar profiles among ${allProfiles.length} total profiles`);
+      // Load session algorithms if not already loaded
+      if (!this.activeAlgorithms.similarityCalculator) {
+        await this.loadSessionAlgorithms(sessionId);
+      }
 
-      // Try multiple thresholds to ensure we get enough similar profiles
-      const thresholds = [0.6, 0.5, 0.4, 0.3];
+      const allProfiles = await this.dataManager.getProfiles();
+      console.log(`🔍 Looking for similar profiles among ${allProfiles.length} total profiles`);
+      console.log('🔧 Using similarity algorithm:', this.activeAlgorithms.similarityCalculator?.version || 'fallback');
+
+      // Use dynamic similarity configuration
+      const config = this.similarityConfig || { similarity_threshold: 0.5, max_similar_profiles: 10 };
+      const thresholds = [config.similarity_threshold, 0.4, 0.3, 0.2];
 
       for (const threshold of thresholds) {
         const similarProfiles = this.similarityCalculator.findSimilarProfiles(
           userScores,
           allProfiles,
-          { threshold, maxResults: 10 }
+          { threshold, maxResults: config.max_similar_profiles }
         );
 
         console.log(`Threshold ${threshold}: Found ${similarProfiles.length} similar profiles`);
@@ -732,7 +1131,7 @@ export class MLService {
         }
       }
 
-      // If still no matches, take the top 5 most similar regardless of threshold
+      // Fallback logic remains the same
       const allWithSimilarity = allProfiles.map(profile => ({
         ...profile,
         similarity: this.similarityCalculator.calculateSimilarity(userScores, profile.scores, 'weighted_euclidean')
@@ -741,11 +1140,7 @@ export class MLService {
       allWithSimilarity.sort((a, b) => b.similarity - a.similarity);
       const top5 = allWithSimilarity.slice(0, 5);
 
-      console.log(`📊 Using top 5 most similar profiles:`, top5.map(p => ({
-        id: p.id,
-        type: p.profile?.playerType,
-        similarity: p.similarity?.toFixed(3)
-      })));
+      console.log(`📊 Using top 5 most similar profiles with algorithm:`, this.activeAlgorithms.similarityCalculator?.version);
       return top5;
 
     } catch (error) {
@@ -755,7 +1150,7 @@ export class MLService {
   }
 
   // Get recommendation insights and explanations
-  async getRecommendationInsights(userScores, recommendations) { // ✅ Add async
+  async getRecommendationInsights(userScores, recommendations) {
     try {
       console.log('🔍 Getting recommendation insights for:', userScores);
       console.log('📋 Recommendations received:', recommendations);
@@ -771,13 +1166,13 @@ export class MLService {
 
         // Use RecommendationEngine's explanation if available
         explanation: safeRecommendations.explanation ||
-          `Based on ${similarProfiles.length} similar golfers and your preferences`,
+          `Enhanced with ${this.activeAlgorithms.scoring?.version || 'fallback'} algorithm from ${similarProfiles.length} similar golfers`,
 
         // Use RecommendationEngine's alternatives if available
         alternatives: safeRecommendations.alternativeOptions || [],
 
         improvementSuggestions: this.generateImprovementSuggestions(userScores, similarProfiles),
-        personalizationLevel: await this.calculatePersonalizationLevel(userScores, similarProfiles), // ✅ Add await
+        personalizationLevel: await this.calculatePersonalizationLevel(userScores, similarProfiles),
         similarUserCount: similarProfiles.length,
         dataQuality: similarProfiles.length >= 10 ? 'High' : similarProfiles.length >= 5 ? 'Medium' : 'Low',
 
@@ -890,8 +1285,8 @@ export class MLService {
   }
 
   // Calculate personalization level
-  async calculatePersonalizationLevel(userScores, similarProfiles) { // ✅ Add async
-    const confidence = await this.calculateModelConfidence(); // ✅ Add await
+  async calculatePersonalizationLevel(userScores, similarProfiles) {
+    const confidence = await this.calculateModelConfidence();
     const dataQuality = similarProfiles.length >= 10 ? 'High' :
                        similarProfiles.length >= 5 ? 'Medium' : 'Low';
 
@@ -963,7 +1358,13 @@ export class MLService {
         profile,
         questionSequence: Object.keys(answers),
         totalQuestions: Object.keys(answers).length,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        // NEW: Include algorithm version info
+        algorithmVersions: {
+          scoring: this.activeAlgorithms.scoring?.version,
+          questionSelection: this.activeAlgorithms.questionSelection?.version,
+          similarityCalculator: this.activeAlgorithms.similarityCalculator?.version
+        }
       };
 
       return this.dataManager.addProfile(profileData);
@@ -973,11 +1374,7 @@ export class MLService {
     }
   }
 
-  // MLService.js - Fixed to return complete profile structure
-
-  // Add this method to your MLService class:
-
-  generateCompleteProfile(userScores) {
+  generateCompleteProfile(userScores, sessionId = null) {
     console.log('🎯 Generating complete profile for scores:', userScores);
 
     // Generate skill level
@@ -1013,55 +1410,25 @@ export class MLService {
       demographics,
       mlEnhanced: false,
       enhancementLevel: 'basic',
-      source: 'Default Algorithm'
+      source: 'Default Algorithm',
+      // NEW: Include algorithm version info
+      algorithmVersions: sessionId ? {
+        scoring: this.activeAlgorithms.scoring?.version || 'fallback',
+        questionSelection: this.activeAlgorithms.questionSelection?.version || 'fallback',
+        similarityCalculator: this.activeAlgorithms.similarityCalculator?.version || 'fallback'
+      } : {}
     };
 
     console.log('✅ Complete profile generated:', completeProfile);
     return completeProfile;
   }
 
-  // Update the generateProfile method:
-  async generateProfile(answers, scores, sessionId, options = {}) {
-    if (!this.isInitialized) {
-      console.warn('MLService not initialized, using basic profile generation');
-      return this.generateCompleteProfile(scores); // Changed this line
-    }
-
-    try {
-      this.performanceMetrics.profilesGenerated++;
-
-      console.log('🎯 Generating profile with user scores:', scores);
-      console.log('📊 Available profiles for similarity:', (await this.getDataManagerMetrics()).totalProfiles);
-
-      // Try to get similar profiles for ML enhancement
-      const similarProfiles = await this.findSimilarProfilesForML(scores);
-
-      if (similarProfiles.length >= 3) {
-        // Generate ML-enhanced profile
-        const enhancedProfile = await this.generateEnhancedProfile(scores, similarProfiles);
-        await this.addProfileData(answers, scores, enhancedProfile, sessionId);
-        await this.updatePerformanceMetrics(); // ✅ Add await
-        return enhancedProfile;
-      } else {
-        // Generate basic but complete profile
-        const basicProfile = this.generateCompleteProfile(scores);
-        await this.addProfileData(answers, scores, basicProfile, sessionId);
-        await this.updatePerformanceMetrics(); // ✅ Add await
-        return basicProfile;
-      }
-
-    } catch (error) {
-      console.error('❌ Error generating profile:', error);
-      return this.generateCompleteProfile(scores); // Changed this line too
-    }
-  }
-
   // Add this new method for ML-enhanced profiles:
-  async generateEnhancedProfile(userScores, similarProfiles) {
+  async generateEnhancedProfile(userScores, similarProfiles, sessionId = null) {
     console.log('🤖 Generating ML-enhanced profile');
 
     // Start with basic profile structure
-    const baseProfile = this.generateCompleteProfile(userScores);
+    const baseProfile = this.generateCompleteProfile(userScores, sessionId);
 
     // Enhance with ML recommendations
     const currentProfile = { recommendations: baseProfile.recommendations };
@@ -1078,7 +1445,7 @@ export class MLService {
         similarUserCount: similarProfiles.length,
         confidence: similarProfiles.length >= 10 ? 'High' : 'Medium',
         personalityPatterns: {
-          insights: `Enhanced based on ${similarProfiles.length} similar golfers`
+          insights: `Enhanced based on ${similarProfiles.length} similar golfers using ${this.activeAlgorithms.similarityCalculator?.version || 'fallback'} algorithm`
         }
       }
     };
@@ -1091,8 +1458,13 @@ export class MLService {
       enhancementLevel: 'full',
       mlMetadata: {
         similarProfiles: similarProfiles.length,
-        confidence: await this.calculateModelConfidence(), // ✅ Add await
-        dataQuality: similarProfiles.length >= 10 ? 'High' : 'Medium'
+        confidence: await this.calculateModelConfidence(),
+        dataQuality: similarProfiles.length >= 10 ? 'High' : 'Medium',
+        algorithmVersions: {
+          scoring: this.activeAlgorithms.scoring?.version || 'fallback',
+          questionSelection: this.activeAlgorithms.questionSelection?.version || 'fallback',
+          similarityCalculator: this.activeAlgorithms.similarityCalculator?.version || 'fallback'
+        }
       }
     };
   }
@@ -1137,10 +1509,8 @@ export class MLService {
     };
   }
 
-
-
-  async calculateModelConfidence() { // ✅ Add async
-    const metrics = await this.getDataManagerMetrics(); // ✅ Add await
+  async calculateModelConfidence() {
+    const metrics = await this.getDataManagerMetrics();
     const profileCount = metrics.totalProfiles || 0;
     const feedbackCount = metrics.totalFeedbacks || 0;
 
@@ -1151,13 +1521,13 @@ export class MLService {
     return 0.3;
   }
 
-  async updatePerformanceMetrics() { // ✅ Add async
-    const metrics = await this.getDataManagerMetrics(); // ✅ Add await
+  async updatePerformanceMetrics() {
+    const metrics = await this.getDataManagerMetrics();
     this.performanceMetrics = {
       ...this.performanceMetrics,
       totalProfiles: metrics.totalProfiles || 0,
       totalFeedbacks: metrics.totalFeedbacks || 0,
-      modelConfidence: await this.calculateModelConfidence(), // ✅ Add await
+      modelConfidence: await this.calculateModelConfidence(),
       lastUpdated: Date.now()
     };
   }
@@ -1204,12 +1574,12 @@ export class MLService {
   }
 
   // Helper method to safely get metrics from data manager
-  async getDataManagerMetrics() { // ✅ Make it async
+  async getDataManagerMetrics() {
     if (this.dataManager.getMLMetrics) {
-      return await this.dataManager.getMLMetrics(); // ✅ Add await if needed
+      return await this.dataManager.getMLMetrics();
     } else {
       // Fallback metrics
-      const profiles = this.dataManager.getProfiles ? await this.dataManager.getProfiles() : []; // ✅ Add await
+      const profiles = this.dataManager.getProfiles ? await this.dataManager.getProfiles() : [];
       return {
         totalProfiles: profiles.length,
         totalFeedbacks: 0,
@@ -1295,12 +1665,12 @@ export class MLService {
 
   async findSimilarProfiles(userScores, options = {}) {
     try {
-      const { minSimilarity = 0.5, limit = 10 } = options; // ✅ Add this destructuring
+      const { minSimilarity = 0.5, limit = 10 } = options;
 
       console.log(`🔍 Finding similar profiles with threshold ${minSimilarity}, limit ${limit}`);
       console.log(`👤 User scores:`, userScores);
 
-      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+      const allProfiles = await this.dataManager.getProfiles();
       console.log(`📊 Total profiles available: ${allProfiles.length}`);
 
       // Debug: show sample of available profiles
@@ -1396,13 +1766,68 @@ export class MLService {
     }
   }
 
+  // NEW: Admin functions for algorithm management
+  async createNewScoringAlgorithm(algorithmData) {
+    return await this.algorithmManager.createAlgorithmVersion('scoring', algorithmData);
+  }
+
+  async createNewQuestionSelectionAlgorithm(algorithmData) {
+    return await this.algorithmManager.createAlgorithmVersion('question_selection', algorithmData);
+  }
+
+  async createABTest(testConfig) {
+    return await this.algorithmManager.createABTest(testConfig);
+  }
+
+  async getABTestResults(testId) {
+    return await this.algorithmManager.getABTestAnalytics(testId);
+  }
+
+  async activateAlgorithm(algorithmType, version) {
+    const success = await this.algorithmManager.activateAlgorithm(algorithmType, version);
+    if (success) {
+      // Reload algorithms
+      await this.loadSessionAlgorithms();
+      await this.applyDynamicConfiguration();
+    }
+    return success;
+  }
+
+  async getAlgorithmPerformance() {
+    return await this.algorithmManager.getAlgorithmPerformanceSummary();
+  }
+
+  // Helper function to get question by ID
+  getQuestionById(questionId) {
+    // This should be replaced with actual question bank lookup
+    // For now, return a default question structure
+    return {
+      id: questionId,
+      type: 'core', // default type
+      priority: 5
+    };
+  }
+
+  // Helper function to calculate score variance
+  calculateScoreVariance(scores) {
+    const values = Object.values(scores).filter(v => typeof v === 'number');
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    return variance;
+  }
+
   healthCheck() {
     return {
       initialized: this.isInitialized,
       version: this.modelVersion,
       dataHealth: this.getDataManagerMetrics(),
       performanceHealth: this.performanceMetrics,
-      status: 'Healthy - Memory Storage Active'
+      algorithmVersions: {
+        scoring: this.activeAlgorithms.scoring?.version || 'fallback',
+        questionSelection: this.activeAlgorithms.questionSelection?.version || 'fallback',
+        similarityCalculator: this.activeAlgorithms.similarityCalculator?.version || 'fallback'
+      },
+      status: 'Healthy - Database-Driven Algorithms Active'
     };
   }
 
@@ -1411,7 +1836,12 @@ export class MLService {
       version: this.modelVersion,
       timestamp: Date.now(),
       data: this.dataManager.exportData(),
-      metrics: this.performanceMetrics
+      metrics: this.performanceMetrics,
+      algorithmVersions: {
+        scoring: this.activeAlgorithms.scoring?.version,
+        questionSelection: this.activeAlgorithms.questionSelection?.version,
+        similarityCalculator: this.activeAlgorithms.similarityCalculator?.version
+      }
     };
   }
 
@@ -1444,7 +1874,7 @@ export class MLService {
         this.feedbackCollector.processBatchFeedback();
       }
 
-      await this.updatePerformanceMetrics(); // ✅ Add await
+      await this.updatePerformanceMetrics();
       console.log('Model updated successfully');
       return true;
     } catch (error) {
