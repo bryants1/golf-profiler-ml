@@ -432,27 +432,50 @@ export class MLService {
 
   // Smart question selection with ML (matching original)
   selectNextQuestion(currentAnswers, currentScores, questionBank, questionNumber, userContext = {}) {
+    console.log('🎯 selectNextQuestion called with:', {
+      isInitialized: this.isInitialized,
+      questionNumber,
+      currentAnswers: Object.keys(currentAnswers),
+      questionBankLength: questionBank.length
+    });
+
     // CRITICAL: Original logic - fall back to basic if not initialized
     if (!this.isInitialized) {
-      console.warn('MLService not initialized, using basic question selection');
+      console.warn('❌ MLService not initialized, using basic question selection');
+      console.log('🔍 Initialization status:', {
+        isInitialized: this.isInitialized,
+        hasQuestionSelector: !!this.questionSelector,
+        hasConfig: !!this.config
+      });
       return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
     }
 
     try {
-      // EnhancedQuestionSelector HAS selectNextQuestion method with exact signature
-      return this.questionSelector.selectNextQuestion(
+      console.log('🤖 Using ML question selection via EnhancedQuestionSelector');
+
+      // Check if questionSelector exists and has the method
+      if (!this.questionSelector || !this.questionSelector.selectNextQuestion) {
+        console.error('❌ EnhancedQuestionSelector not available, falling back to basic');
+        return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
+      }
+
+      const selectedQuestion = this.questionSelector.selectNextQuestion(
         currentAnswers,
         currentScores,
         questionBank,
         questionNumber,
         userContext
       );
+
+      console.log('✅ ML question selected:', selectedQuestion?.id);
+      return selectedQuestion;
+
     } catch (error) {
       console.error('❌ Error in ML question selection:', error);
+      console.log('🔄 Falling back to basic question selection');
       return this.basicQuestionSelection(currentAnswers, questionBank, questionNumber);
     }
   }
-
   // Collect and process user feedback
   async collectFeedback(sessionId, feedbackData, profileData = null) {
     try {
