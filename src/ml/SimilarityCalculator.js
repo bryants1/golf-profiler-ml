@@ -4,6 +4,270 @@ import { ML_CONFIG } from './MLConfig.js';
 export class SimilarityCalculator {
   constructor() {
     this.weights = this.calculateDimensionWeights();
+    this.config = { SIMILARITY_THRESHOLD: 0.5, MAX_SIMILAR_PROFILES: 10 };
+  }
+
+  // MLService.js - Updated findSimilarProfilesForML method
+  // Replace your existing findSimilarProfilesForML method with this enhanced version
+
+  async findSimilarProfilesForML(userScores, sessionId = 'default') {
+    try {
+      // Load session algorithms if not already loaded
+      if (!this.activeAlgorithms.similarityCalculator) {
+        await this.loadSessionAlgorithms(sessionId);
+      }
+
+      const allProfiles = await this.dataManager.getProfiles();
+      console.log(`🔍 Enhanced similarity search among ${allProfiles.length} total profiles`);
+      console.log('🔧 Using similarity algorithm:', this.activeAlgorithms.similarityCalculator?.version || 'fallback');
+      console.log('👤 User scores:', userScores);
+
+      // Use enhanced progressive search with archetype validation
+      const similarProfiles = this.similarityCalculator.findSimilarProfilesProgressive(
+        userScores,
+        allProfiles,
+        {
+          algorithm: 'weighted_euclidean',
+          maxResults: this.config?.MAX_SIMILAR_PROFILES || 10,
+          minResults: this.config?.MIN_SIMILAR_PROFILES || 3,
+          useArchetypeBonus: true,
+          diversityFactor: 0.1
+        }
+      );
+
+      console.log(`✅ Progressive search completed: ${similarProfiles.length} similar profiles found`);
+
+      if (similarProfiles.length > 0) {
+        // Log archetype distribution for debugging
+        const targetArchetype = this.similarityCalculator.determineArchetype(userScores);
+        const archetypeDistribution = {};
+
+        similarProfiles.forEach(profile => {
+          const archetype = profile.profileArchetype || 'unknown';
+          archetypeDistribution[archetype] = (archetypeDistribution[archetype] || 0) + 1;
+        });
+
+        console.log(`🎯 Target archetype: ${targetArchetype.archetype} (${(targetArchetype.confidence * 100).toFixed(0)}% confidence)`);
+        console.log(`📊 Found archetype distribution:`, archetypeDistribution);
+
+        // Validate match quality
+        const sameArchetypeCount = similarProfiles.filter(p =>
+          p.profileArchetype === targetArchetype.archetype
+        ).length;
+
+        const matchQuality = sameArchetypeCount / similarProfiles.length;
+        console.log(`✨ Match quality: ${(matchQuality * 100).toFixed(0)}% same archetype`);
+
+        // Track similarity performance for A/B testing
+        await this.trackSimilarityPerformance(sessionId, {
+          targetArchetype: targetArchetype.archetype,
+          profilesFound: similarProfiles.length,
+          matchQuality,
+          archetypeDistribution
+        });
+
+        return similarProfiles;
+      } else {
+        console.warn('⚠️ No similar profiles found with enhanced search');
+
+        // Detailed debugging for no matches
+        console.log('🔍 Running detailed similarity debug...');
+
+        // Test against a few random profiles to understand why no matches
+        const sampleProfiles = allProfiles.slice(0, 5);
+        sampleProfiles.forEach((profile, index) => {
+          console.log(`\n🧪 Debug similarity with sample profile ${index + 1}:`);
+          this.similarityCalculator.debugSimilarityCalculation(userScores, profile.scores);
+        });
+
+        return [];
+      }
+
+    } catch (error) {
+      console.error('❌ Error in enhanced similarity search:', error);
+      console.error('Stack trace:', error.stack);
+      return [];
+    }
+  }
+
+  // Add this new method to track similarity performance
+  async trackSimilarityPerformance(sessionId, performanceData) {
+    try {
+      if (!this.algorithmManager || !this.activeAlgorithms.similarityCalculator) {
+        return;
+      }
+
+      // Track basic metrics
+      await this.algorithmManager.trackPerformance(
+        'similarity_calculator',
+        this.activeAlgorithms.similarityCalculator.version,
+        'profiles_found',
+        performanceData.profilesFound
+      );
+
+      await this.algorithmManager.trackPerformance(
+        'similarity_calculator',
+        this.activeAlgorithms.similarityCalculator.version,
+        'match_quality',
+        performanceData.matchQuality
+      );
+
+      // Track archetype accuracy
+      await this.algorithmManager.trackPerformance(
+        'similarity_calculator',
+        this.activeAlgorithms.similarityCalculator.version,
+        'archetype_accuracy',
+        performanceData.matchQuality > 0.5 ? 1 : 0
+      );
+
+      console.log(`📊 Tracked similarity performance: ${performanceData.profilesFound} profiles, ${(performanceData.matchQuality * 100).toFixed(0)}% quality`);
+
+    } catch (error) {
+      console.error('❌ Error tracking similarity performance:', error);
+    }
+  }
+
+  // Enhanced testMLEnhancement method for better debugging
+  async testMLEnhancement() {
+    try {
+      console.log('🧪 Testing enhanced ML system capabilities...');
+
+      // Test different archetype scenarios
+      const testScenarios = [
+        {
+          name: 'Serious Traditional Player',
+          scores: { skillLevel: 8, socialness: 4, traditionalism: 9, luxuryLevel: 6, competitiveness: 8, amenityImportance: 5, pace: 8 }
+        },
+        {
+          name: 'Beginner Social Player',
+          scores: { skillLevel: 2, socialness: 8, traditionalism: 3, luxuryLevel: 3, competitiveness: 2, amenityImportance: 6, pace: 3 }
+        },
+        {
+          name: 'Luxury Social Player',
+          scores: { skillLevel: 5, socialness: 9, traditionalism: 4, luxuryLevel: 9, competitiveness: 4, amenityImportance: 9, pace: 5 }
+        }
+      ];
+
+      for (const scenario of testScenarios) {
+        console.log(`\n🎯 Testing scenario: ${scenario.name}`);
+        console.log('📊 Test scores:', scenario.scores);
+
+        const allProfiles = await this.dataManager.getProfiles();
+        const similarProfiles = this.similarityCalculator.findSimilarProfilesProgressive(
+          scenario.scores,
+          allProfiles,
+          { debug: true }
+        );
+
+        console.log(`✅ Found ${similarProfiles.length} similar profiles for ${scenario.name}`);
+
+        if (similarProfiles.length > 0) {
+          const archetypes = similarProfiles.map(p => p.profileArchetype).filter(a => a);
+          const uniqueArchetypes = [...new Set(archetypes)];
+          console.log(`🎯 Archetype matches: ${uniqueArchetypes.join(', ')}`);
+
+          // Show top 3 matches
+          similarProfiles.slice(0, 3).forEach((profile, i) => {
+            console.log(`  ${i + 1}. ${profile.profileArchetype} - ${(profile.similarity * 100).toFixed(1)}% similarity`);
+          });
+        }
+      }
+
+      console.log('✅ Enhanced ML testing completed');
+
+    } catch (error) {
+      console.error('❌ Error testing enhanced ML system:', error);
+    }
+  }
+
+  // Enhanced getUserSimilarityInsights with archetype information
+  async getUserSimilarityInsights(userScores, options = {}) {
+    console.log('🔍 Enhanced getUserSimilarityInsights called');
+
+    if (!this.isInitialized) {
+      console.warn('⚠️ MLService not initialized for similarity insights');
+      return {
+        similarUsers: 0,
+        averageSimilarity: 0,
+        topMatches: [],
+        userPercentiles: {},
+        archetype: null
+      };
+    }
+
+    try {
+      console.log('📊 Getting enhanced similarity insights...');
+
+      const allProfiles = await this.dataManager.getProfiles();
+      console.log('📊 Total profiles available:', allProfiles.length);
+
+      // Determine user's archetype
+      const userArchetype = this.similarityCalculator.determineArchetype(userScores);
+      console.log(`🎯 User archetype: ${userArchetype.archetype} (${(userArchetype.confidence * 100).toFixed(0)}% confidence)`);
+
+      // Find similar profiles with enhanced algorithm
+      const similarProfiles = this.similarityCalculator.findSimilarProfilesProgressive(
+        userScores,
+        allProfiles,
+        { ...options, debug: false }
+      );
+
+      console.log(`🔍 Found ${similarProfiles.length} enhanced similar profiles`);
+
+      // Calculate archetype-specific insights
+      const sameArchetypeProfiles = similarProfiles.filter(p =>
+        p.profileArchetype === userArchetype.archetype
+      );
+
+      const compatibleProfiles = similarProfiles.filter(p =>
+        p.profileArchetype === userArchetype.archetype ||
+        this.similarityCalculator.areCompatibleArchetypes(userArchetype.archetype, p.profileArchetype)
+      );
+
+      const result = {
+        similarUsers: similarProfiles.length,
+        averageSimilarity: similarProfiles.length > 0
+          ? similarProfiles.reduce((sum, p) => sum + p.similarity, 0) / similarProfiles.length
+          : 0,
+
+        topMatches: similarProfiles.slice(0, 5).map(p => ({
+          similarity: p.similarity,
+          archetype: p.profileArchetype,
+          baseSimilarity: p.baseSimilarity,
+          archetypeBonus: p.archetypeBonus,
+          keyDimensions: this.identifyKeyMatchingDimensions(userScores, p.scores)
+        })),
+
+        userPercentiles: this.calculateUserPercentiles(userScores, allProfiles),
+
+        // Enhanced archetype insights
+        archetype: {
+          primary: userArchetype.archetype,
+          confidence: userArchetype.confidence,
+          sameArchetypeMatches: sameArchetypeProfiles.length,
+          compatibleMatches: compatibleProfiles.length,
+          matchQuality: similarProfiles.length > 0 ? compatibleProfiles.length / similarProfiles.length : 0
+        }
+      };
+
+      console.log('✅ Enhanced similarity insights generated:', {
+        similarUsers: result.similarUsers,
+        archetype: result.archetype.primary,
+        matchQuality: (result.archetype.matchQuality * 100).toFixed(0) + '%'
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error getting enhanced similarity insights:', error);
+      return {
+        similarUsers: 0,
+        averageSimilarity: 0,
+        topMatches: [],
+        userPercentiles: {},
+        archetype: { primary: 'unknown', confidence: 0 }
+      };
+    }
   }
 
   // Main similarity calculation with multiple algorithms
