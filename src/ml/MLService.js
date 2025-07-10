@@ -515,77 +515,197 @@ export class MLService {
     }
   }
 
-  async getMLStatistics() { // ✅ Add async
-  const dataMetrics = await this.getDataManagerMetrics(); // ✅ Add await
-
-  // FeedbackCollector has collectProfileFeedback, addFeedback methods, but no getFeedbackAnalytics
-  const feedbackAnalytics = {
-    totalFeedbacks: dataMetrics.totalFeedbacks || 0,
-    averageRating: 0.75,
-    recentTrend: 'stable'
-  };
-
-  // EnhancedQuestionSelector has selectNextQuestion method, but no getQuestionAnalytics
-  const questionAnalytics = {
-    totalQuestions: 8,
-    averageEffectiveness: 0.75,
-    selectionVariety: 'high'
-  };
-
-  return {
-    model: {
-      version: this.modelVersion,
-      initialized: this.isInitialized,
-      confidence: await this.calculateModelConfidence() // ✅ Add await
-    },
-    data: dataMetrics,
-    feedback: feedbackAnalytics,
-    questions: questionAnalytics,
-    performance: this.performanceMetrics
-  };
-}
-
-  // Get user similarity insights - with debugging
-  async getUserSimilarityInsights(userScores, options = {}) { // ✅ Add async
+  async getMLStatistics() {
     try {
-      const allProfiles = await this.dataManager.getProfiles(); // ✅ Add await
+      console.log('📊 Getting ML statistics...');
 
-      console.log('🔍 Getting similarity insights for user scores:', userScores);
-      console.log('📊 Total profiles available:', allProfiles.length);
+      const dataMetrics = await this.getDataManagerMetrics();
+      console.log('✅ Got data metrics:', dataMetrics);
 
-      // Use a lower threshold to ensure we get similar profiles
-      const lowerThreshold = options.threshold || 0.5; // Lower from default 0.7
+      const modelConfidence = await this.calculateModelConfidence();
+      console.log('✅ Got model confidence:', modelConfidence);
 
-      const similarProfiles = this.similarityCalculator.findSimilarProfiles(
-        userScores,
-        allProfiles,
-        { ...options, threshold: lowerThreshold }
-      );
-
-      console.log(`🔍 Found ${similarProfiles.length} similar profiles with threshold ${lowerThreshold}`);
-
-      return {
-        similarUsers: similarProfiles.length,
-        averageSimilarity: similarProfiles.length > 0
-          ? similarProfiles.reduce((sum, p) => sum + p.similarity, 0) / similarProfiles.length
-          : 0,
-        topMatches: similarProfiles.slice(0, 5).map(p => ({
-          similarity: p.similarity,
-          keyDimensions: this.identifyKeyMatchingDimensions(userScores, p.scores)
-        })),
-        userPercentiles: this.calculateUserPercentiles(userScores, allProfiles)
+      // FeedbackCollector has collectProfileFeedback, addFeedback methods, but no getFeedbackAnalytics
+      const feedbackAnalytics = {
+        totalFeedbacks: dataMetrics.totalFeedbacks || 0,
+        averageRating: 0.75,
+        recentTrend: 'stable'
       };
+
+      // EnhancedQuestionSelector has selectNextQuestion method, but no getQuestionAnalytics
+      const questionAnalytics = {
+        totalQuestions: 8,
+        averageEffectiveness: 0.75,
+        selectionVariety: 'high'
+      };
+
+      const result = {
+        model: {
+          version: this.modelVersion,
+          initialized: this.isInitialized,
+          confidence: modelConfidence
+        },
+        data: dataMetrics,
+        feedback: feedbackAnalytics,
+        questions: questionAnalytics,
+        performance: this.performanceMetrics
+      };
+
+      console.log('✅ ML statistics generated successfully:', result);
+      return result;
+
     } catch (error) {
-      console.error('Error getting similarity insights:', error);
+      console.error('❌ Error getting ML statistics:', error);
+
+      // Return a safe fallback object
       return {
-        similarUsers: 0,
-        averageSimilarity: 0,
-        topMatches: [],
-        userPercentiles: {}
+        model: {
+          version: this.modelVersion || '1.0.0',
+          initialized: this.isInitialized || false,
+          confidence: 0.5 // Safe fallback
+        },
+        data: {
+          totalProfiles: 0,
+          totalFeedbacks: 0,
+          averageQuestions: 6,
+          averageAccuracy: 0.75
+        },
+        feedback: {
+          totalFeedbacks: 0,
+          averageRating: 0.75,
+          recentTrend: 'stable'
+        },
+        questions: {
+          totalQuestions: 8,
+          averageEffectiveness: 0.75,
+          selectionVariety: 'high'
+        },
+        performance: this.performanceMetrics || {
+          profilesGenerated: 0,
+          averageAccuracy: 0,
+          totalFeedbacks: 0,
+          lastUpdated: Date.now()
+        }
       };
     }
   }
 
+  async getMLStatistics() {
+    console.log('🔍 getMLStatistics called, stack trace:');
+    console.trace(); // This will show you exactly where it's being called from
+    if (!this.isInitialized) {
+      console.warn('⚠️ MLService not initialized, returning basic stats');
+      return {
+        model: {
+          version: this.modelVersion,
+          initialized: false,
+          confidence: 'Not Ready'
+        },
+        data: { totalProfiles: 0, totalFeedbacks: 0 },
+        feedback: { totalFeedbacks: 0 },
+        questions: { totalQuestions: 0 },
+        performance: this.performanceMetrics
+      };
+    }
+
+    // ... rest of method
+  }
+  async getMLStatistics() {
+    console.log('🔍 getMLStatistics called, stack trace:');
+    console.trace(); // This will show you exactly where it's being called from
+
+    if (!this.isInitialized) {
+      console.warn('⚠️ MLService not initialized, returning basic stats');
+      return {
+        model: {
+          version: this.modelVersion,
+          initialized: false,
+          confidence: 'Not Ready'
+        },
+        data: { totalProfiles: 0, totalFeedbacks: 0 },
+        feedback: { totalFeedbacks: 0 },
+        questions: { totalQuestions: 0 },
+        performance: this.performanceMetrics
+      };
+    }
+
+    try {
+      console.log('📊 Getting ML statistics...');
+
+      const dataMetrics = await this.getDataManagerMetrics();
+      console.log('✅ Got data metrics:', dataMetrics);
+
+      const modelConfidence = await this.calculateModelConfidence();
+      console.log('✅ Got model confidence:', modelConfidence);
+
+      // FeedbackCollector has collectProfileFeedback, addFeedback methods, but no getFeedbackAnalytics
+      const feedbackAnalytics = {
+        totalFeedbacks: dataMetrics.totalFeedbacks || 0,
+        averageRating: 0.75,
+        recentTrend: 'stable'
+      };
+
+      // EnhancedQuestionSelector has selectNextQuestion method, but no getQuestionAnalytics
+      const questionAnalytics = {
+        totalQuestions: 8,
+        averageEffectiveness: 0.75,
+        selectionVariety: 'high'
+      };
+
+      const result = {
+        model: {
+          version: this.modelVersion,
+          initialized: this.isInitialized,
+          confidence: modelConfidence
+        },
+        data: dataMetrics,
+        feedback: feedbackAnalytics,
+        questions: questionAnalytics,
+        performance: this.performanceMetrics
+      };
+
+      console.log('✅ ML statistics generated successfully:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error getting ML statistics:', error);
+      console.error('❌ Error stack:', error.stack);
+
+      // Return a safe fallback object
+      return {
+        model: {
+          version: this.modelVersion || '1.0.0',
+          initialized: this.isInitialized || false,
+          confidence: 0.5 // Safe fallback number instead of string
+        },
+        data: {
+          totalProfiles: 0,
+          totalFeedbacks: 0,
+          averageQuestions: 6,
+          averageAccuracy: 0.75,
+          profilesLastWeek: 0,
+          feedbackDistribution: {},
+          modelConfidence: 'Learning'
+        },
+        feedback: {
+          totalFeedbacks: 0,
+          averageRating: 0.75,
+          recentTrend: 'stable'
+        },
+        questions: {
+          totalQuestions: 8,
+          averageEffectiveness: 0.75,
+          selectionVariety: 'high'
+        },
+        performance: this.performanceMetrics || {
+          profilesGenerated: 0,
+          averageAccuracy: 0,
+          totalFeedbacks: 0,
+          lastUpdated: Date.now()
+        }
+      };
+    }
+  }
   // Override similarity finding to ensure ML enhancement works
   async findSimilarProfilesForML(userScores) { // ✅ Add async
     try {
