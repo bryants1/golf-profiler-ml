@@ -54,11 +54,25 @@ const MLAdminInterface = ({ mlService }) => {
     try {
       setLoading(true);
 
+      // Check if mlService is available and initialized
+      if (!mlService || !mlService.getMLStatistics) {
+        console.error('MLService not available or not properly initialized');
+        setLoading(false);
+        return;
+      }
+
       // Load current algorithms
       const mlStats = await mlService.getMLStatistics();
-      setAlgorithms(mlStats.model.algorithmVersions);
+      console.log('📊 ML Stats loaded:', mlStats);
 
-      // Load A/B test data (mock for now)
+      // Set algorithm versions from ML stats
+      setAlgorithms({
+        scoring: mlStats.model?.algorithmVersions?.scoring || 'v1.0.0',
+        questionSelection: mlStats.model?.algorithmVersions?.questionSelection || 'v1.0.0',
+        similarityCalculator: mlStats.model?.algorithmVersions?.similarityCalculator || 'v1.0.0'
+      });
+
+      // Load A/B test data (mock for now since we're in memory mode)
       const mockABTests = [
         {
           id: 1,
@@ -87,19 +101,25 @@ const MLAdminInterface = ({ mlService }) => {
       ];
       setABTests(mockABTests);
 
-      // Load performance data (mock for now)
+      // Load performance data (using actual ML stats)
       const mockPerformance = [
         {
           algorithmType: 'scoring',
-          version: 'v1.0.0',
+          version: algorithms.scoring || 'v1.0.0',
           metrics: {
-            user_satisfaction: { average: 0.82, count: 150 },
-            accuracy: { average: 0.78, count: 150 }
+            user_satisfaction: {
+              average: mlStats.feedback?.averageRating || 0.82,
+              count: mlStats.data?.totalProfiles || 150
+            },
+            accuracy: {
+              average: mlStats.performance?.averageAccuracy || 0.78,
+              count: mlStats.data?.totalProfiles || 150
+            }
           }
         },
         {
-          algorithmType: 'scoring',
-          version: 'v1.1.0',
+          algorithmType: 'questionSelection',
+          version: algorithms.questionSelection || 'v1.0.0',
           metrics: {
             user_satisfaction: { average: 0.85, count: 95 },
             accuracy: { average: 0.81, count: 95 }
@@ -117,6 +137,12 @@ const MLAdminInterface = ({ mlService }) => {
 
   const createNewAlgorithm = async () => {
     try {
+      // Validate required fields
+      if (!newAlgorithm.version || !newAlgorithm.name) {
+        alert('Please fill in version and name fields');
+        return;
+      }
+
       const algorithmData = {
         version: newAlgorithm.version,
         algorithm_name: newAlgorithm.name,
@@ -154,21 +180,30 @@ const MLAdminInterface = ({ mlService }) => {
         };
       }
 
+      // Call the MLService method (which is now a mock)
       const result = await mlService.createNewScoringAlgorithm(algorithmData);
 
-      if (result) {
+      if (result && result.success) {
         alert(`New ${newAlgorithm.type} algorithm created: ${newAlgorithm.version}`);
         setNewAlgorithm({ type: 'scoring', version: '', name: '', config: {}, notes: '' });
         loadAdminData();
+      } else {
+        alert('Error creating algorithm');
       }
     } catch (error) {
       console.error('Error creating algorithm:', error);
-      alert('Error creating algorithm');
+      alert('Error creating algorithm: ' + error.message);
     }
   };
 
   const createABTest = async () => {
     try {
+      // Validate required fields
+      if (!newABTest.testName || !newABTest.versionA || !newABTest.versionB) {
+        alert('Please fill in test name and both version fields');
+        return;
+      }
+
       const testConfig = {
         testName: newABTest.testName,
         description: newABTest.description,
@@ -183,9 +218,10 @@ const MLAdminInterface = ({ mlService }) => {
         }
       };
 
+      // Call the MLService method (which is now a mock)
       const result = await mlService.createABTest(testConfig);
 
-      if (result) {
+      if (result && result.success) {
         alert(`A/B Test created: ${newABTest.testName}`);
         setNewABTest({
           testName: '',
@@ -198,10 +234,12 @@ const MLAdminInterface = ({ mlService }) => {
           successMetrics: {}
         });
         loadAdminData();
+      } else {
+        alert('Error creating A/B test');
       }
     } catch (error) {
       console.error('Error creating A/B test:', error);
-      alert('Error creating A/B test');
+      alert('Error creating A/B test: ' + error.message);
     }
   };
 
@@ -211,10 +249,12 @@ const MLAdminInterface = ({ mlService }) => {
       if (success) {
         alert(`Activated ${algorithmType} algorithm: ${version}`);
         loadAdminData();
+      } else {
+        alert('Error activating algorithm');
       }
     } catch (error) {
       console.error('Error activating algorithm:', error);
-      alert('Error activating algorithm');
+      alert('Error activating algorithm: ' + error.message);
     }
   };
 
@@ -224,6 +264,19 @@ const MLAdminInterface = ({ mlService }) => {
         <div className="text-center">
           <Cpu className="mx-auto text-blue-600 mb-4" size={48} />
           <p className="text-gray-600">Loading ML Admin Interface...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if mlService is available
+  if (!mlService) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertCircle className="mx-auto text-red-600 mb-4" size={48} />
+          <p className="text-gray-600">MLService not available</p>
+          <p className="text-sm text-gray-500">Please ensure MLService is properly initialized</p>
         </div>
       </div>
     );
@@ -244,7 +297,9 @@ const MLAdminInterface = ({ mlService }) => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-green-100 px-3 py-1 rounded-full">
-                <span className="text-green-800 text-sm font-medium">System Active</span>
+                <span className="text-green-800 text-sm font-medium">
+                  {mlService.healthCheck ? 'System Active' : 'Basic Mode'}
+                </span>
               </div>
             </div>
           </div>
@@ -311,7 +366,9 @@ const MLAdminInterface = ({ mlService }) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-blue-600">Total Profiles</p>
-                    <p className="font-bold text-blue-800">1,247</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? performance[0].metrics.user_satisfaction.count : 0}
+                    </p>
                   </div>
                   <div>
                     <p className="text-blue-600">Active A/B Tests</p>
@@ -319,11 +376,15 @@ const MLAdminInterface = ({ mlService }) => {
                   </div>
                   <div>
                     <p className="text-blue-600">Model Confidence</p>
-                    <p className="font-bold text-blue-800">0.82</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? performance[0].metrics.accuracy.average.toFixed(2) : '0.82'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-blue-600">Avg Satisfaction</p>
-                    <p className="font-bold text-blue-800">84.2%</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? (performance[0].metrics.user_satisfaction.average * 100).toFixed(1) + '%' : '84.2%'}
+                    </p>
                   </div>
                 </div>
               </div>
