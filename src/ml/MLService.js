@@ -1,7 +1,7 @@
 // MLService.js - Updated to work with your original classes but use memory-based data storage
 
 // Import your original sophisticated classes FIRST
-import { SupabaseDataManager } from './SupabaseDataManager.js';
+import { SupabaseDataManager } from '../db/SupabaseDataManager.js';
 import { EnhancedQuestionSelector } from './FixedMLSystem.js';
 import { SimilarityCalculator } from './SimilarityCalculator.js';
 import { FeedbackCollector } from './FeedbackCollector.js';
