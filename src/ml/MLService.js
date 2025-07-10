@@ -1137,9 +1137,6 @@ export class MLService {
       console.log(`🔍 Finding similar profiles with threshold ${minSimilarity}, limit ${limit}`);
       console.log(`👤 User scores:`, userScores);
 
-      const allProfiles = this.dataManager.getProfiles();
-      console.log(`📊 Total profiles available: ${allProfiles.length}`);
-
       // Debug: show sample of available profiles
       if (allProfiles.length > 0) {
         console.log('📋 Sample profiles by type:',
