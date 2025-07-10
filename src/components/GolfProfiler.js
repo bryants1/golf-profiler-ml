@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, RotateCcw, MapPin, Star, Users, Clock, Brain, TrendingUp, Edit3, Settings, BarChart3, Lightbulb, Target, Zap } from 'lucide-react';
 
-// Import ML System - In a real app, these would be separate files
-import MLService from '../ml/MLService.js';  // Changed from ../../ml/
+// Import ML System
+import MLService from '../ml/MLService.js';
 
 // Override localStorage methods to use memory for Claude.ai compatibility
 if (typeof window !== 'undefined') {
@@ -286,190 +286,77 @@ const GolfProfiler = () => {
   ];
 
   // Fixed scoring algorithm using weighted averages
-  // Fixed scoring algorithm using weighted averages
-    const calculateWeightedScores = (allAnswers) => {
-      const dimensionScores = {
-        skillLevel: [], socialness: [], traditionalism: [], luxuryLevel: [],
-        competitiveness: [], ageGeneration: [], genderLean: [], amenityImportance: [],
-        pace: [], courseStyle: {}
-      };
+  const calculateWeightedScores = (allAnswers) => {
+    const dimensionScores = {
+      skillLevel: [], socialness: [], traditionalism: [], luxuryLevel: [],
+      competitiveness: [], ageGeneration: [], genderLean: [], amenityImportance: [],
+      pace: [], courseStyle: {}
+    };
 
-      // Question type weights (more important questions have higher weight)
-      const questionWeights = {
-        'starter': 1.2,
-        'core': 1.5,
-        'skill_assessment': 1.8,
-        'social': 1.3,
-        'lifestyle': 1.0,
-        'knowledge': 1.1,
-        'personality': 1.4,
-        'preparation': 1.0
-      };
+    // Question type weights (more important questions have higher weight)
+    const questionWeights = {
+      'starter': 1.2,
+      'core': 1.5,
+      'skill_assessment': 1.8,
+      'social': 1.3,
+      'lifestyle': 1.0,
+      'knowledge': 1.1,
+      'personality': 1.4,
+      'preparation': 1.0
+    };
 
-      // Collect all scores with weights
-      Object.entries(allAnswers).forEach(([questionId, answerData]) => {
-        // Find the question by ID from the questionBank
-        const question = questionBank.find(q => q.id === questionId);
-        const weight = questionWeights[question?.type] || 1.0;
-        const rawScores = answerData.rawScores || {};
+    // Collect all scores with weights
+    Object.entries(allAnswers).forEach(([questionId, answerData]) => {
+      // Find the question by ID from the questionBank
+      const question = questionBank.find(q => q.id === questionId);
+      const weight = questionWeights[question?.type] || 1.0;
+      const rawScores = answerData.rawScores || {};
 
-        Object.entries(rawScores).forEach(([dimension, value]) => {
-          if (dimension === 'courseStyle') {
-            dimensionScores.courseStyle[value] = (dimensionScores.courseStyle[value] || 0) + 1;
-          } else if (dimensionScores[dimension]) {
-            dimensionScores[dimension].push({ value, weight });
-          }
-        });
-      });
-
-      // Calculate weighted averages
-      const finalScores = {
-        skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
-        competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
-        courseStyle: dimensionScores.courseStyle, pace: 0
-      };
-
-      Object.keys(finalScores).forEach(dimension => {
-        if (dimension === 'courseStyle') return; // Already handled above
-
-        const scores = dimensionScores[dimension];
-        if (scores.length > 0) {
-          const weightedSum = scores.reduce((sum, score) => sum + (score.value * score.weight), 0);
-          const totalWeight = scores.reduce((sum, score) => sum + score.weight, 0);
-          const average = weightedSum / totalWeight;
-
-          // Scale to 0-10 range but don't artificially cap everything at 10
-          finalScores[dimension] = Math.round(Math.max(0, Math.min(10, average)) * 10) / 10;
+      Object.entries(rawScores).forEach(([dimension, value]) => {
+        if (dimension === 'courseStyle') {
+          dimensionScores.courseStyle[value] = (dimensionScores.courseStyle[value] || 0) + 1;
+        } else if (dimensionScores[dimension]) {
+          dimensionScores[dimension].push({ value, weight });
         }
       });
+    });
 
-      return finalScores;
+    // Calculate weighted averages
+    const finalScores = {
+      skillLevel: 0, socialness: 0, traditionalism: 0, luxuryLevel: 0,
+      competitiveness: 0, ageGeneration: 0, genderLean: 0, amenityImportance: 0,
+      courseStyle: dimensionScores.courseStyle, pace: 0
     };
-    
+
+    Object.keys(finalScores).forEach(dimension => {
+      if (dimension === 'courseStyle') return; // Already handled above
+
+      const scores = dimensionScores[dimension];
+      if (scores.length > 0) {
+        const weightedSum = scores.reduce((sum, score) => sum + (score.value * score.weight), 0);
+        const totalWeight = scores.reduce((sum, score) => sum + score.weight, 0);
+        const average = weightedSum / totalWeight;
+
+        // Scale to 0-10 range but don't artificially cap everything at 10
+        finalScores[dimension] = Math.round(Math.max(0, Math.min(10, average)) * 10) / 10;
+      }
+    });
+
+    return finalScores;
+  };
+
   // Initialize ML service and first question
-  // Fix for GolfProfiler.js - Replace the useEffect that initializes ML
   useEffect(() => {
     const initializeML = async () => {
-      try {
-        console.log('🔄 Starting ML initialization...');
+      if (selectedQuestions.length === 0) {
+        const firstQuestion = mlService.selectNextQuestion({}, scores, questionBank, 0);
+        setSelectedQuestions([firstQuestion]);
 
-        // Ensure ML service is fully initialized before using it
-        await mlService.initialize();
-
-        console.log('✅ ML service initialized, checking readiness...');
-
-        // Wait for initialization to be confirmed
-        let retries = 0;
-        while (!mlService.isInitialized && retries < 10) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          retries++;
-        }
-
-        if (!mlService.isInitialized) {
-          console.warn('⚠️ ML service failed to initialize after retries');
-        }
-
-        if (selectedQuestions.length === 0) {
-          console.log('🎯 Selecting first question...');
-          const firstQuestion = await mlService.selectNextQuestion({}, scores, questionBank, 0);
-
-          if (firstQuestion) {
-            setSelectedQuestions([firstQuestion]);
-            console.log('✅ First question selected:', firstQuestion.id);
-          } else {
-            console.error('❌ Failed to select first question');
-            // Fallback to first question in bank
-            setSelectedQuestions([questionBank[0]]);
-          }
-
-          // Load ML stats after initialization
-          const stats = await mlService.getMLStatistics();
-          setMlStats(stats);
-          console.log('📊 ML stats loaded:', stats.model.confidence);
-        }
-      } catch (error) {
-        console.error('❌ Error initializing ML:', error);
-        // Fallback to basic mode
-        if (selectedQuestions.length === 0) {
-          setSelectedQuestions([questionBank[0]]);
-        }
+        // Load ML stats
+        const stats = mlService.getMLStatistics();
+        setMlStats(stats);
       }
     };
-
-    initializeML();
-  }, []); // Empty dependency array - run once
-
-  // Update the handleAnswer function to properly await ML calls
-  const handleAnswer = async (optionIndex) => {
-    try {
-      const currentQ = selectedQuestions[currentQuestion];
-      const selectedOption = currentQ.options[optionIndex];
-
-      console.log('🔍 Processing answer for question:', currentQ.id);
-
-      // Store raw scores for better calculation
-      const newAnswers = {
-        ...answers,
-        [currentQ.id]: {
-          questionText: currentQ.question,
-          answer: selectedOption.text,
-          optionIndex,
-          rawScores: selectedOption.scores
-        }
-      };
-      setAnswers(newAnswers);
-
-      // Calculate scores using weighted averaging
-      const newScores = calculateWeightedScores(newAnswers);
-      console.log('🎯 New scores calculated:', newScores);
-      setScores(newScores);
-
-      // Determine next question using ML
-      const totalQuestions = Object.keys(newAnswers).length;
-      const shouldContinue = totalQuestions < 7 && (
-        totalQuestions < 5 ||
-        Math.abs(newScores.skillLevel - 5) > 2 ||
-        Math.abs(newScores.luxuryLevel - 5) > 2 ||
-        newScores.amenityImportance === 0
-      );
-
-      if (shouldContinue) {
-        console.log('🤖 Getting next question from ML...');
-
-        // Ensure ML service is ready
-        if (!mlService.isInitialized) {
-          console.warn('⚠️ ML service not ready, waiting...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-
-        const nextQuestion = await mlService.selectNextQuestion(
-          newAnswers,
-          newScores,
-          questionBank,
-          totalQuestions,
-          { sessionId, timestamp: Date.now() }
-        );
-
-        if (nextQuestion) {
-          setSelectedQuestions([...selectedQuestions, nextQuestion]);
-          setCurrentQuestion(currentQuestion + 1);
-          console.log('✅ Next question selected:', nextQuestion.id);
-        } else {
-          console.log('🏁 No more questions, generating profile...');
-          await generateProfile(newAnswers, newScores);
-        }
-      } else {
-        console.log('🏁 Question limit reached, generating profile...');
-        await generateProfile(newAnswers, newScores);
-      }
-    } catch (error) {
-      console.error('❌ Error in handleAnswer:', error);
-      // Continue with profile generation as fallback
-      const newAnswers = { ...answers };
-      const newScores = calculateWeightedScores(newAnswers);
-      await generateProfile(newAnswers, newScores);
-    }
-  };
 
     initializeML();
   }, []);
