@@ -15,8 +15,8 @@ export class SupabaseDataManager {
     console.log('- Raw URL check:', JSON.stringify(process.env.REACT_APP_SUPABASE_URL));
     console.log('- Raw KEY check:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'EXISTS' : 'NULL/UNDEFINED');
 
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-    const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://rzzuweonzvaavazhevdg.supabase.co';
+    const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6enV3ZW9uenZhYXZhemhldmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTAxNDEsImV4cCI6MjA2NzcyNjE0MX0.TcEvZxJTQML9Nx-SXNzjFvFN5aJiV1Kftc3UeOpg-hg';
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ SUPABASE CREDENTIALS MISSING!');
