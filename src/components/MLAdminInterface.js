@@ -11,14 +11,7 @@ import {
   Users,
   Database,
   Cpu,
-  Target,
-  Shield,
-  Clock,
-  Award,
-  Brain,
-  Monitor,
-  Server,
-  Code
+  Target
 } from 'lucide-react';
 
 const MLAdminInterface = ({ mlService }) => {
@@ -267,13 +260,10 @@ const MLAdminInterface = ({ mlService }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="bg-white rounded-lg p-8 shadow-lg border border-gray-200">
-            <Cpu className="mx-auto text-blue-600 mb-4 animate-pulse" size={48} />
-            <p className="text-gray-700 font-medium text-lg">Loading ML Administration</p>
-            <p className="text-gray-500 text-sm mt-2">Initializing system components...</p>
-          </div>
+          <Cpu className="mx-auto text-blue-600 mb-4" size={48} />
+          <p className="text-gray-600">Loading ML Admin Interface...</p>
         </div>
       </div>
     );
@@ -282,482 +272,392 @@ const MLAdminInterface = ({ mlService }) => {
   // Check if mlService is available
   if (!mlService) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="bg-white rounded-lg p-8 shadow-lg border border-red-200">
-            <AlertCircle className="mx-auto text-red-600 mb-4" size={48} />
-            <p className="text-gray-700 font-medium text-lg">MLService Unavailable</p>
-            <p className="text-gray-500 text-sm mt-2">Please ensure MLService is properly initialized</p>
-          </div>
+          <AlertCircle className="mx-auto text-red-600 mb-4" size={48} />
+          <p className="text-gray-600">MLService not available</p>
+          <p className="text-sm text-gray-500">Please ensure MLService is properly initialized</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Professional Header */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white px-8 py-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-white flex items-center">
-                  <div className="bg-white/10 rounded-lg p-2 mr-4">
-                    <Settings className="w-6 h-6" />
-                  </div>
-                  ML Algorithm Administration
-                </h1>
-                <p className="text-gray-300 mt-2">Advanced machine learning system management and optimization</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center">
-                  <Shield className="mr-2" size={16} />
-                  <span className="text-sm font-medium">
-                    {mlService.healthCheck ? 'System Active' : 'Basic Mode'}
-                  </span>
-                </div>
-                <div className="bg-white/10 rounded-lg p-3">
-                  <Server className="w-6 h-6 text-white" />
-                </div>
+    <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+                <Settings className="mr-3 text-blue-600" size={28} />
+                ML Algorithm Administration
+              </h1>
+              <p className="text-gray-600 mt-1">Manage algorithms, A/B tests, and performance monitoring</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-green-100 px-3 py-1 rounded-full">
+                <span className="text-green-800 text-sm font-medium">
+                  {mlService.healthCheck ? 'System Active' : 'Basic Mode'}
+                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Professional Navigation Tabs */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="flex">
-              {[
-                { id: 'algorithms', label: 'Current Algorithms', icon: Cpu, description: 'Active system algorithms' },
-                { id: 'ab-tests', label: 'A/B Testing', icon: GitBranch, description: 'Performance experiments' },
-                { id: 'performance', label: 'Performance Analytics', icon: BarChart3, description: 'System metrics' },
-                { id: 'create', label: 'Create & Deploy', icon: Zap, description: 'New implementations' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-6 py-4 text-left border-b-2 transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-blue-600 bg-white text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <tab.icon size={18} className="mr-3" />
-                    <div>
-                      <div className="font-medium">{tab.label}</div>
-                      <div className="text-xs text-gray-500">{tab.description}</div>
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-gray-200">
+          {[
+            { id: 'algorithms', label: 'Current Algorithms', icon: Cpu },
+            { id: 'ab-tests', label: 'A/B Tests', icon: GitBranch },
+            { id: 'performance', label: 'Performance', icon: BarChart3 },
+            { id: 'create', label: 'Create New', icon: Zap }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <tab.icon size={16} className="mr-2" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-6">
+          {/* Current Algorithms Tab */}
+          {activeTab === 'algorithms' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Active Algorithm Versions</h3>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {Object.entries(algorithms).map(([type, version]) => (
+                  <div key={type} className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-800 capitalize">{type.replace(/([A-Z])/g, ' $1')}</h4>
+                      <CheckCircle className="text-green-500" size={20} />
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-8">
-            {/* Current Algorithms Tab */}
-            {activeTab === 'algorithms' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Active Algorithm Versions</h3>
-                  <p className="text-gray-600">Currently deployed machine learning algorithms and their versions</p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-6">
-                  {Object.entries(algorithms).map(([type, version]) => (
-                    <div key={type} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center">
-                          <div className="bg-blue-600 rounded-lg p-2 mr-3">
-                            <Code className="text-white" size={18} />
-                          </div>
-                          <h4 className="font-semibold text-gray-900 capitalize">
-                            {type.replace(/([A-Z])/g, ' $1')}
-                          </h4>
-                        </div>
-                        <div className="flex items-center text-green-600">
-                          <CheckCircle size={18} />
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-sm text-gray-600 mb-1">Active Version</p>
-                          <p className="font-mono bg-gray-100 px-3 py-1 rounded text-sm font-medium">
-                            {version}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => activateAlgorithm(type, 'v1.1.0')}
-                            className="text-xs bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors font-medium"
-                          >
-                            Update Version
-                          </button>
-                          <button className="text-xs bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 transition-colors font-medium">
-                            View History
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* System Overview */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
-                    <Monitor className="mr-2" size={20} />
-                    System Overview & Statistics
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <div className="bg-blue-600 rounded-lg p-3 mb-2 inline-block">
-                        <Users className="text-white" size={20} />
-                      </div>
-                      <p className="text-blue-600 text-sm font-medium">Total Profiles</p>
-                      <p className="font-bold text-blue-900 text-lg">
-                        {performance.length > 0 ? performance[0].metrics.user_satisfaction.count : 0}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-green-600 rounded-lg p-3 mb-2 inline-block">
-                        <Activity className="text-white" size={20} />
-                      </div>
-                      <p className="text-green-600 text-sm font-medium">Active Tests</p>
-                      <p className="font-bold text-green-900 text-lg">
-                        {abTests.filter(t => t.status === 'running').length}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-purple-600 rounded-lg p-3 mb-2 inline-block">
-                        <Target className="text-white" size={20} />
-                      </div>
-                      <p className="text-purple-600 text-sm font-medium">Model Accuracy</p>
-                      <p className="font-bold text-purple-900 text-lg">
-                        {performance.length > 0 ? (performance[0].metrics.accuracy.average * 100).toFixed(1) + '%' : '82.0%'}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-orange-600 rounded-lg p-3 mb-2 inline-block">
-                        <Award className="text-white" size={20} />
-                      </div>
-                      <p className="text-orange-600 text-sm font-medium">User Satisfaction</p>
-                      <p className="font-bold text-orange-900 text-lg">
-                        {performance.length > 0 ? (performance[0].metrics.user_satisfaction.average * 100).toFixed(1) + '%' : '84.2%'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* A/B Tests Tab */}
-            {activeTab === 'ab-tests' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">A/B Test Management</h3>
-                  <p className="text-gray-600">Active and completed algorithm performance experiments</p>
-                </div>
-
-                <div className="space-y-4">
-                  {abTests.map(test => (
-                    <div key={test.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center">
-                          <div className="bg-purple-600 rounded-lg p-2 mr-4">
-                            <GitBranch className="text-white" size={18} />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{test.test_name}</h4>
-                            <p className="text-sm text-gray-600">
-                              {test.algorithm_type} • Started {test.start_date} • {test.participants} participants
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            test.status === 'running'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {test.status.toUpperCase()}
-                          </span>
-                          {test.winner && (
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-medium">
-                              Winner: {test.winner}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-gray-600 text-sm font-medium">Version A (Control)</p>
-                          <p className="font-mono bg-white px-2 py-1 rounded text-sm mt-1">{test.version_a}</p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-gray-600 text-sm font-medium">Version B (Test)</p>
-                          <p className="font-mono bg-white px-2 py-1 rounded text-sm mt-1">{test.version_b}</p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-gray-600 text-sm font-medium">Traffic Split</p>
-                          <p className="font-semibold text-gray-900 mt-1">{(test.traffic_split * 100).toFixed(0)}% to B</p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-gray-600 text-sm font-medium">Participants</p>
-                          <p className="font-semibold text-gray-900 mt-1">{test.participants}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-sm font-medium">
-                          View Detailed Results
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">Version: <span className="font-mono bg-gray-200 px-2 py-1 rounded">{version}</span></p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => activateAlgorithm(type, 'v1.1.0')}
+                          className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        >
+                          Update
                         </button>
-                        {test.status === 'running' && (
-                          <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors text-sm font-medium">
-                            Stop Test
-                          </button>
-                        )}
-                        {test.winner && test.status === 'completed' && (
-                          <button
-                            onClick={() => activateAlgorithm(test.algorithm_type, test.winner === 'version_b' ? test.version_b : test.version_a)}
-                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-sm font-medium"
-                          >
-                            Deploy Winner
-                          </button>
-                        )}
+                        <button className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">
+                          History
+                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Performance Tab */}
-            {activeTab === 'performance' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Algorithm Performance Metrics</h3>
-                  <p className="text-gray-600">Detailed performance analytics for all deployed algorithms</p>
-                </div>
-
-                <div className="space-y-6">
-                  {performance.map((perf, index) => (
-                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center">
-                          <div className="bg-green-600 rounded-lg p-2 mr-4">
-                            <BarChart3 className="text-white" size={18} />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 text-lg">
-                              {perf.algorithmType} Algorithm
-                            </h4>
-                            <p className="text-sm text-gray-600">Version {perf.version}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center text-green-600">
-                          <TrendingUp size={20} className="mr-2" />
-                          <span className="text-sm font-medium">Performing Well</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-6">
-                        {Object.entries(perf.metrics).map(([metric, data]) => (
-                          <div key={metric} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-center mb-3">
-                              <Target className="text-blue-600 mr-2" size={16} />
-                              <h5 className="font-medium text-gray-800 capitalize">
-                                {metric.replace('_', ' ')}
-                              </h5>
-                            </div>
-                            <div className="text-2xl font-bold text-gray-900 mb-1">
-                              {(data.average * 100).toFixed(1)}%
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Based on {data.count} data points
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Create New Tab */}
-            {activeTab === 'create' && (
-              <div className="space-y-10">
-                {/* Create Algorithm Section */}
-                <div className="bg-white border border-gray-200 rounded-lg p-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center">
-                    <div className="bg-blue-600 rounded-lg p-2 mr-3">
-                      <Cpu className="text-white" size={20} />
-                    </div>
-                    Create New Algorithm Version
-                  </h3>
-                  <p className="text-gray-600 mb-6">Deploy a new algorithm version for testing and evaluation</p>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Algorithm Type</label>
-                      <select
-                        value={newAlgorithm.type}
-                        onChange={(e) => setNewAlgorithm({...newAlgorithm, type: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="scoring">Scoring Algorithm</option>
-                        <option value="question_selection">Question Selection</option>
-                        <option value="similarity_calculator">Similarity Calculator</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Version Number</label>
-                      <input
-                        type="text"
-                        value={newAlgorithm.version}
-                        onChange={(e) => setNewAlgorithm({...newAlgorithm, version: e.target.value})}
-                        placeholder="v1.2.0"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Algorithm Name</label>
-                      <input
-                        type="text"
-                        value={newAlgorithm.name}
-                        onChange={(e) => setNewAlgorithm({...newAlgorithm, name: e.target.value})}
-                        placeholder="enhanced_weighted_average"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Implementation Notes</label>
-                      <input
-                        type="text"
-                        value={newAlgorithm.notes}
-                        onChange={(e) => setNewAlgorithm({...newAlgorithm, notes: e.target.value})}
-                        placeholder="Enhanced scoring with improved dimension weights"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <button
-                    onClick={createNewAlgorithm}
-                    className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center"
-                  >
-                    <Code className="mr-2" size={18} />
-                    Deploy Algorithm
-                  </button>
+              {/* Quick Stats */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">System Overview</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-blue-600">Total Profiles</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? performance[0].metrics.user_satisfaction.count : 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600">Active A/B Tests</p>
+                    <p className="font-bold text-blue-800">{abTests.filter(t => t.status === 'running').length}</p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600">Model Confidence</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? performance[0].metrics.accuracy.average.toFixed(2) : '0.82'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600">Avg Satisfaction</p>
+                    <p className="font-bold text-blue-800">
+                      {performance.length > 0 ? (performance[0].metrics.user_satisfaction.average * 100).toFixed(1) + '%' : '84.2%'}
+                    </p>
+                  </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                {/* Create A/B Test Section */}
-                <div className="bg-white border border-gray-200 rounded-lg p-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center">
-                    <div className="bg-purple-600 rounded-lg p-2 mr-3">
-                      <GitBranch className="text-white" size={20} />
-                    </div>
-                    Create New A/B Test
-                  </h3>
-                  <p className="text-gray-600 mb-6">Set up a controlled experiment to compare algorithm performance</p>
+          {/* A/B Tests Tab */}
+          {activeTab === 'ab-tests' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">A/B Test Management</h3>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Test Name</label>
-                      <input
-                        type="text"
-                        value={newABTest.testName}
-                        onChange={(e) => setNewABTest({...newABTest, testName: e.target.value})}
-                        placeholder="Scoring Algorithm v1.2 Performance Test"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Algorithm Type</label>
-                      <select
-                        value={newABTest.algorithmType}
-                        onChange={(e) => setNewABTest({...newABTest, algorithmType: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="scoring">Scoring Algorithm</option>
-                        <option value="question_selection">Question Selection</option>
-                        <option value="similarity_calculator">Similarity Calculator</option>
-                      </select>
+              <div className="space-y-4">
+                {abTests.map(test => (
+                  <div key={test.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-medium text-gray-800">{test.test_name}</h4>
+                        <p className="text-sm text-gray-600">{test.algorithm_type} • Started {test.start_date}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          test.status === 'running'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {test.status}
+                        </span>
+                        {test.winner && (
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                            Winner: {test.winner}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Control Version (A)</label>
-                      <input
-                        type="text"
-                        value={newABTest.versionA}
-                        onChange={(e) => setNewABTest({...newABTest, versionA: e.target.value})}
-                        placeholder="v1.0.0"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600">Version A</p>
+                        <p className="font-mono bg-gray-100 px-2 py-1 rounded">{test.version_a}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Version B</p>
+                        <p className="font-mono bg-gray-100 px-2 py-1 rounded">{test.version_b}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Traffic Split</p>
+                        <p className="font-medium">{(test.traffic_split * 100).toFixed(0)}% to B</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Participants</p>
+                        <p className="font-medium">{test.participants}</p>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Test Version (B)</label>
-                      <input
-                        type="text"
-                        value={newABTest.versionB}
-                        onChange={(e) => setNewABTest({...newABTest, versionB: e.target.value})}
-                        placeholder="v1.2.0"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Traffic Split to B (%)</label>
-                      <input
-                        type="number"
-                        min="10"
-                        max="90"
-                        value={newABTest.trafficSplit * 100}
-                        onChange={(e) => setNewABTest({...newABTest, trafficSplit: e.target.value / 100})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                      <input
-                        type="date"
-                        value={newABTest.endDate}
-                        onChange={(e) => setNewABTest({...newABTest, endDate: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
+                    <div className="mt-3 flex space-x-2">
+                      <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                        View Results
+                      </button>
+                      {test.status === 'running' && (
+                        <button className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                          Stop Test
+                        </button>
+                      )}
+                      {test.winner && test.status === 'completed' && (
+                        <button
+                          onClick={() => activateAlgorithm(test.algorithm_type, test.winner === 'version_b' ? test.version_b : test.version_a)}
+                          className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        >
+                          Activate Winner
+                        </button>
+                      )}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-                  <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Test Description</label>
-                    <textarea
-                      value={newABTest.description}
-                      onChange={(e) => setNewABTest({...newABTest, description: e.target.value})}
-                      placeholder="Testing improved scoring algorithm with enhanced dimension weights for better user personalization..."
-                      rows="3"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          {/* Performance Tab */}
+          {activeTab === 'performance' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Algorithm Performance Metrics</h3>
+
+              <div className="space-y-4">
+                {performance.map((perf, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-800">
+                        {perf.algorithmType} - {perf.version}
+                      </h4>
+                      <TrendingUp className="text-green-500" size={20} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(perf.metrics).map(([metric, data]) => (
+                        <div key={metric} className="bg-gray-50 p-3 rounded">
+                          <p className="text-sm text-gray-600 capitalize">{metric.replace('_', ' ')}</p>
+                          <p className="text-lg font-bold text-gray-800">
+                            {(data.average * 100).toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-gray-500">{data.count} samples</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Create New Tab */}
+          {activeTab === 'create' && (
+            <div className="space-y-8">
+              {/* Create Algorithm Section */}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <Cpu className="mr-2" size={20} />
+                  Create New Algorithm Version
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Algorithm Type</label>
+                    <select
+                      value={newAlgorithm.type}
+                      onChange={(e) => setNewAlgorithm({...newAlgorithm, type: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="scoring">Scoring Algorithm</option>
+                      <option value="question_selection">Question Selection</option>
+                      <option value="similarity_calculator">Similarity Calculator</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Version</label>
+                    <input
+                      type="text"
+                      value={newAlgorithm.version}
+                      onChange={(e) => setNewAlgorithm({...newAlgorithm, version: e.target.value})}
+                      placeholder="v1.2.0"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
-                  <button
-                    onClick={createABTest}
-                    className="mt-6 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center"
-                  >
-                    <GitBranch className="mr-2" size={18} />
-                    Launch A/B Test
-                  </button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Algorithm Name</label>
+                    <input
+                      type="text"
+                      value={newAlgorithm.name}
+                      onChange={(e) => setNewAlgorithm({...newAlgorithm, name: e.target.value})}
+                      placeholder="enhanced_weighted_average"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <input
+                      type="text"
+                      value={newAlgorithm.notes}
+                      onChange={(e) => setNewAlgorithm({...newAlgorithm, notes: e.target.value})}
+                      placeholder="Enhanced scoring with improved weights"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
+
+                <button
+                  onClick={createNewAlgorithm}
+                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                >
+                  Create Algorithm
+                </button>
               </div>
-            )}
-          </div>
+
+              {/* Create A/B Test Section */}
+              <div className="bg-purple-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <GitBranch className="mr-2" size={20} />
+                  Create New A/B Test
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Test Name</label>
+                    <input
+                      type="text"
+                      value={newABTest.testName}
+                      onChange={(e) => setNewABTest({...newABTest, testName: e.target.value})}
+                      placeholder="Scoring Algorithm v1.2 Test"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Algorithm Type</label>
+                    <select
+                      value={newABTest.algorithmType}
+                      onChange={(e) => setNewABTest({...newABTest, algorithmType: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="scoring">Scoring Algorithm</option>
+                      <option value="question_selection">Question Selection</option>
+                      <option value="similarity_calculator">Similarity Calculator</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Version A (Control)</label>
+                    <input
+                      type="text"
+                      value={newABTest.versionA}
+                      onChange={(e) => setNewABTest({...newABTest, versionA: e.target.value})}
+                      placeholder="v1.0.0"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Version B (Test)</label>
+                    <input
+                      type="text"
+                      value={newABTest.versionB}
+                      onChange={(e) => setNewABTest({...newABTest, versionB: e.target.value})}
+                      placeholder="v1.2.0"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Traffic Split to B (%)</label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="90"
+                      value={newABTest.trafficSplit * 100}
+                      onChange={(e) => setNewABTest({...newABTest, trafficSplit: e.target.value / 100})}
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={newABTest.endDate}
+                      onChange={(e) => setNewABTest({...newABTest, endDate: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={newABTest.description}
+                    onChange={(e) => setNewABTest({...newABTest, description: e.target.value})}
+                    placeholder="Testing improved scoring algorithm with enhanced dimension weights..."
+                    rows="3"
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <button
+                  onClick={createABTest}
+                  className="mt-4 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
+                >
+                  Create A/B Test
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
