@@ -58,9 +58,6 @@ const GolfProfiler = () => {
     courseStyle: {}, pace: 0
   });
 
-
-  };
-
 // Question bank (moved outside component to avoid dependency issues)
 const questionBank = [
     // EXISTING 8 QUESTIONS (keep these as-is)
