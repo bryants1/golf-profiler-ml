@@ -261,146 +261,147 @@ export class MemoryDataManager {
 export class EnhancedQuestionSelector {
   constructor(dataManager) {
     this.dataManager = dataManager;
-    this.questionEffectiveness = this.dataManager.getQuestionEffectiveness();
-    this.selectionHistory = new Map(); // Track what's been selected
+    this.questionAnalytics = {};
+    this.userBehaviorPatterns = {};
   }
 
   selectNextQuestion(currentAnswers, currentScores, questionBank, questionNumber, userContext = {}) {
+    console.log('🎯 Enhanced question selection called for question #', questionNumber);
+
+    // Use the basic selection as base
     if (questionNumber === 0) {
-      return this.selectStarterQuestionWithVariation(questionBank);
+      const starters = questionBank.filter(q => q.type === 'starter');
+      const selected = starters[Math.floor(Math.random() * starters.length)] || questionBank[0];
+      console.log('🎯 Selected starter question:', selected?.id);
+      return selected;
     }
 
     const answeredIds = Object.keys(currentAnswers);
-    const unansweredQuestions = questionBank.filter(q => !answeredIds.includes(q.id));
+    const unanswered = questionBank.filter(q => !answeredIds.includes(q.id));
 
-    if (unansweredQuestions.length === 0) {
-      return null;
-    }
+    if (unanswered.length === 0) return null;
 
-    // Calculate scores with randomization
-    const questionScores = unansweredQuestions.map(question => ({
-      question,
-      score: this.calculateQuestionScoreWithVariation(
-        question,
-        currentAnswers,
-        currentScores,
-        questionNumber,
-        userContext
-      )
+    // INTELLIGENT ML-BASED SELECTION
+    const scored = unanswered.map(q => ({
+      question: q,
+      score: this.calculateIntelligentQuestionScore(q, currentAnswers, currentScores, questionNumber)
     }));
 
-    // Sort by score
-    questionScores.sort((a, b) => b.score - a.score);
+    scored.sort((a, b) => b.score - a.score);
 
-    // Add meaningful randomization - pick from top 3 candidates
-    const topQuestions = questionScores.slice(0, Math.min(3, questionScores.length));
+    console.log('🧠 Question scores:', scored.map(s => ({ id: s.question.id, score: s.score.toFixed(2) })));
 
-    // Weighted random selection with time-based seed
-    const weights = topQuestions.map((item, index) => Math.pow(0.7, index)); // Decreasing weights
-    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    // Add variety - don't always pick the top score
+    const topCandidates = scored.slice(0, Math.min(2, scored.length));
+    const randomIndex = Math.floor(Math.random() * topCandidates.length);
+    const selected = topCandidates[randomIndex].question;
 
-    // Use time-based randomization
-    const seed = (Date.now() + questionNumber * 1000) % 10000;
-    let random = (seed / 10000) * totalWeight;
-
-    for (let i = 0; i < topQuestions.length; i++) {
-      random -= weights[i];
-      if (random <= 0) {
-        this.recordSelection(topQuestions[i].question.id, questionNumber);
-        return topQuestions[i].question;
-      }
-    }
-
-    return topQuestions[0].question;
+    console.log('🎯 Enhanced selection picked:', selected?.id, 'from', topCandidates.length, 'candidates');
+    return selected;
   }
 
-  selectStarterQuestionWithVariation(questionBank) {
-    const starterQuestions = questionBank.filter(q => q.type === 'starter');
-
-    if (starterQuestions.length === 0) {
-      return questionBank[0];
-    }
-
-    // Time-based selection for variety
-    const timeBasedIndex = Math.floor((Date.now() / 1000) % starterQuestions.length);
-    return starterQuestions[timeBasedIndex];
-  }
-
-  calculateQuestionScoreWithVariation(question, currentAnswers, currentScores, questionNumber, userContext) {
+  calculateIntelligentQuestionScore(question, currentAnswers, currentScores, questionNumber) {
     let score = question.priority || 0;
 
-    // Add uncertainty reduction score
-    score += this.calculateUncertaintyReductionScore(question, currentScores);
+    // Calculate which dimensions need more information
+    const uncertainties = this.calculateUncertainties(currentScores);
+    console.log('🎯 Current uncertainties:', uncertainties);
 
-    // Add ML effectiveness score
-    const effectiveness = this.questionEffectiveness[question.id];
-    if (effectiveness) {
-      score += effectiveness.averageEffectiveness * 2;
-    }
-
-    // Add variation factor based on question type and timing
-    score += this.calculateVariationBonus(question, questionNumber);
-
-    // Penalize recently selected similar questions
-    score -= this.getRecentSelectionPenalty(question.id);
-
-    return score;
-  }
-
-  calculateUncertaintyReductionScore(question, currentScores) {
-    const uncertainties = this.calculateCurrentUncertainties(currentScores);
-    let reductionScore = 0;
-
-    question.options?.forEach(option => {
+    // Score based on how much this question helps with uncertain dimensions
+    let uncertaintyReduction = 0;
+    question.options.forEach(option => {
       Object.keys(option.scores || {}).forEach(dimension => {
-        if (uncertainties[dimension]) {
-          reductionScore += uncertainties[dimension] * 0.5;
+        const uncertainty = uncertainties[dimension] || 0;
+        if (uncertainty > 3) { // High uncertainty
+          uncertaintyReduction += 3;
+        } else if (uncertainty > 1) { // Medium uncertainty
+          uncertaintyReduction += 1;
         }
       });
     });
 
-    return reductionScore;
+    score += uncertaintyReduction;
+
+    // Adaptive question selection based on progress
+    if (questionNumber <= 2) {
+      // Early questions: prioritize broad, engaging questions
+      if (question.type === 'core' || question.type === 'social' || question.type === 'lifestyle') {
+        score += 2;
+      }
+    } else if (questionNumber >= 3) {
+      // Later questions: target specific gaps
+      if (question.type === 'skill_assessment' && uncertainties.skillLevel > 2) {
+        score += 3;
+      }
+      if (question.type === 'gear' && uncertainties.luxuryLevel > 2) {
+        score += 2;
+      }
+      if (question.type === 'preparation' && uncertainties.amenityImportance > 2) {
+        score += 2;
+      }
+    }
+
+    // Variety bonus - avoid recently selected question types
+    const recentTypes = Object.values(currentAnswers).map(a => {
+      const q = this.findQuestionById(a.questionId);
+      return q?.type;
+    }).filter(Boolean);
+
+    const typeCount = recentTypes.filter(t => t === question.type).length;
+    if (typeCount === 0) {
+      score += 1; // Bonus for new type
+    } else if (typeCount >= 2) {
+      score -= 1; // Penalty for repeated type
+    }
+
+    // Balance different aspects
+    if (questionNumber === 2 && !this.hasAnsweredDimension(currentAnswers, 'socialness')) {
+      if (question.id === 'playing_partner' || question.id === 'nineteenth_hole') {
+        score += 2;
+      }
+    }
+
+    if (questionNumber === 3 && !this.hasAnsweredDimension(currentAnswers, 'luxuryLevel')) {
+      if (question.id === 'course_recognition' || question.id === 'golf_membership') {
+        score += 2;
+      }
+    }
+
+    console.log(`🧠 Question ${question.id}: base=${question.priority}, uncertainty=${uncertaintyReduction}, final=${score}`);
+    return score;
   }
 
-  calculateCurrentUncertainties(currentScores) {
-    const dimensions = ['skillLevel', 'socialness', 'traditionalism', 'luxuryLevel', 'competitiveness', 'ageGeneration', 'amenityImportance', 'pace'];
+  calculateUncertainties(currentScores) {
     const uncertainties = {};
+    const dimensions = ['skillLevel', 'socialness', 'traditionalism', 'luxuryLevel', 'competitiveness', 'amenityImportance', 'pace'];
 
-    dimensions.forEach(dimension => {
-      const score = currentScores[dimension] || 0;
-      uncertainties[dimension] = score === 0 ? 10 : Math.abs(score - 5);
+    dimensions.forEach(dim => {
+      const value = currentScores[dim] || 0;
+      // Higher uncertainty for unset (0) or middle values (around 5)
+      if (value === 0) {
+        uncertainties[dim] = 10; // Maximum uncertainty
+      } else {
+        uncertainties[dim] = Math.abs(value - 5); // Distance from middle
+      }
     });
 
     return uncertainties;
   }
 
-  calculateVariationBonus(question, questionNumber) {
-    // Add time-based variation
-    const timeVariation = (Date.now() % 1000) / 1000; // 0-1
-
-    // Question type bonuses that change over time
-    const typeBonuses = {
-      'starter': 2 - (questionNumber * 0.3),
-      'core': 1 + timeVariation,
-      'skill_assessment': 1.5 + (timeVariation * 0.5),
-      'social': 1 + (Math.sin(Date.now() / 10000) * 0.5),
-      'preference': 1 + (Math.cos(Date.now() / 8000) * 0.3)
-    };
-
-    return typeBonuses[question.type] || timeVariation;
+  hasAnsweredDimension(currentAnswers, dimension) {
+    // Check if we've already explored this dimension
+    for (const answer of Object.values(currentAnswers)) {
+      const scores = answer.rawScores || {};
+      if (scores[dimension] && scores[dimension] > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  recordSelection(questionId, position) {
-    const key = `${questionId}_${position}`;
-    this.selectionHistory.set(key, Date.now());
-  }
-
-  getRecentSelectionPenalty(questionId) {
-    const recent = Array.from(this.selectionHistory.entries())
-      .filter(([key, time]) => key.startsWith(questionId) && (Date.now() - time) < 60000)
-      .length;
-
-    return recent * 0.5; // Penalty for recent selections
+  findQuestionById(questionId) {
+    // This would normally reference the question bank, simplified for now
+    return { id: questionId, type: 'unknown' };
   }
 }
 
