@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, RotateCcw, MapPin, Star, Users, Clock, Brain, TrendingUp, Edit3, Settings, BarChart3, Lightbulb, Target, Zap, Award, Sparkles, ChevronDown, Circle, Shield, User, Trophy, Building, Compass } from 'lucide-react';
+import { ChevronRight, RotateCcw, MapPin, Star, Users, Clock, Brain, TrendingUp, Edit3, Settings, BarChart3, Lightbulb, Target, Zap, Award, Sparkles, ChevronDown } from 'lucide-react';
 
 // Mock ML Service for demo
 const mockMLService = {
@@ -103,36 +103,32 @@ const GolfProfiler = () => {
     courseStyle: {}, pace: 0
   });
 
-  // Question bank with professional icons
+  // Question bank
   const questionBank = [
     {
       id: 'golf_movie',
       type: 'starter',
       priority: 10,
-      question: "Choose Your Preferred Golf Entertainment",
+      question: "Pick a Golf Movie to Watch Tonight",
       options: [
         {
           text: "Happy Gilmore",
-          icon: <Circle className="w-8 h-8 text-blue-600" />,
-          description: "Comedy and entertainment",
+          image: "🏌️‍♂️💥",
           scores: { skillLevel: 2, socialness: 8, traditionalism: 1, competitiveness: 3, ageGeneration: 6 }
         },
         {
           text: "Tin Cup",
-          icon: <Trophy className="w-8 h-8 text-amber-600" />,
-          description: "Competitive drama",
+          image: "🏆⛳",
           scores: { skillLevel: 7, socialness: 5, traditionalism: 4, competitiveness: 8, ageGeneration: 4 }
         },
         {
           text: "The Legend of Bagger Vance",
-          icon: <Compass className="w-8 h-8 text-emerald-600" />,
-          description: "Philosophy and tradition",
+          image: "🧘‍♂️📿",
           scores: { skillLevel: 6, socialness: 4, traditionalism: 9, competitiveness: 4, ageGeneration: 3 }
         },
         {
           text: "Caddyshack",
-          icon: <Users className="w-8 h-8 text-orange-600" />,
-          description: "Social and comedic",
+          image: "😂🐿️",
           scores: { skillLevel: 5, socialness: 9, traditionalism: 2, competitiveness: 3, ageGeneration: 2 }
         }
       ]
@@ -141,30 +137,26 @@ const GolfProfiler = () => {
       id: 'dream_course',
       type: 'core',
       priority: 9,
-      question: "Select Your Ideal Golf Environment",
+      question: "Your Dream Round Looks Like...",
       options: [
         {
-          text: "Coastal Championship Course",
-          icon: <MapPin className="w-8 h-8 text-blue-600" />,
-          description: "Premium oceanside setting",
+          text: "Cliffside coastal course at sunset",
+          image: "🌊🌅",
           scores: { luxuryLevel: 8, traditionalism: 6, courseStyle: 'coastal', amenityImportance: 7 }
         },
         {
-          text: "Classic Parkland Design",
-          icon: <Building className="w-8 h-8 text-green-600" />,
-          description: "Traditional tree-lined fairways",
+          text: "Tree-lined classic parkland",
+          image: "🌳🏞️",
           scores: { traditionalism: 9, skillLevel: 6, courseStyle: 'parkland', luxuryLevel: 6 }
         },
         {
-          text: "Links-Style Championship",
-          icon: <Target className="w-8 h-8 text-gray-600" />,
-          description: "Challenging windy conditions",
+          text: "Windy open links with brown turf",
+          image: "🌬️⛳",
           scores: { skillLevel: 8, traditionalism: 10, competitiveness: 7, courseStyle: 'links' }
         },
         {
-          text: "Casual Municipal Course",
-          icon: <Users className="w-8 h-8 text-purple-600" />,
-          description: "Relaxed accessible golf",
+          text: "Laid-back 9-hole muni with no dress code",
+          image: "👕🍺",
           scores: { socialness: 8, luxuryLevel: 2, traditionalism: 1, competitiveness: 2 }
         }
       ]
@@ -173,30 +165,26 @@ const GolfProfiler = () => {
       id: 'playing_partner',
       type: 'social',
       priority: 8,
-      question: "Choose Your Ideal Playing Partner",
+      question: "Pick a Playing Partner for 18 Holes",
       options: [
         {
-          text: "Entertainment Celebrity",
-          icon: <Star className="w-8 h-8 text-purple-600" />,
-          description: "Fun and engaging personality",
+          text: "Bill Murray",
+          image: "😄🎭",
           scores: { socialness: 9, competitiveness: 2, traditionalism: 3, ageGeneration: 3 }
         },
         {
-          text: "Professional Golfer",
-          icon: <Trophy className="w-8 h-8 text-amber-600" />,
-          description: "Elite skill and knowledge",
+          text: "Tiger Woods",
+          image: "🐅🏆",
           scores: { competitiveness: 10, skillLevel: 8, traditionalism: 7, socialness: 3 }
         },
         {
-          text: "Business Leader",
-          icon: <Building className="w-8 h-8 text-blue-600" />,
-          description: "Strategic and accomplished",
+          text: "Barack Obama",
+          image: "🎯💼",
           scores: { socialness: 7, traditionalism: 6, competitiveness: 5, ageGeneration: 5 }
         },
         {
-          text: "Close Friend",
-          icon: <Users className="w-8 h-8 text-green-600" />,
-          description: "Comfortable and familiar",
+          text: "Your best friend",
+          image: "👥❤️",
           scores: { socialness: 10, competitiveness: 3, traditionalism: 2, luxuryLevel: 3 }
         }
       ]
@@ -205,30 +193,26 @@ const GolfProfiler = () => {
       id: 'pressure_shot',
       type: 'skill_assessment',
       priority: 4,
-      question: "Approach for 210-Yard Water Carry",
+      question: "You're 210 yards out over water. What's in your hand?",
       options: [
         {
-          text: "3-Wood Attack",
-          icon: <Zap className="w-8 h-8 text-red-600" />,
-          description: "Aggressive play",
+          text: "3-wood - going for it",
+          image: "🏌️‍♂️💨",
           scores: { skillLevel: 8, competitiveness: 9, traditionalism: 5 }
         },
         {
-          text: "Hybrid Precision",
-          icon: <Target className="w-8 h-8 text-blue-600" />,
-          description: "Strategic accuracy",
+          text: "Hybrid - smart play",
+          image: "🎯⛳",
           scores: { skillLevel: 6, competitiveness: 6, traditionalism: 7 }
         },
         {
-          text: "Wedge Layup",
-          icon: <Shield className="w-8 h-8 text-green-600" />,
-          description: "Conservative safety",
+          text: "Wedge - laying up safe",
+          image: "🎯🛡️",
           scores: { skillLevel: 4, competitiveness: 3, traditionalism: 8 }
         },
         {
-          text: "Course Management",
-          icon: <Compass className="w-8 h-8 text-orange-600" />,
-          description: "Alternative routing",
+          text: "I'm already back in the cart",
+          image: "🛺😅",
           scores: { skillLevel: 2, socialness: 8, competitiveness: 1 }
         }
       ]
@@ -237,30 +221,26 @@ const GolfProfiler = () => {
       id: 'golf_attire',
       type: 'lifestyle',
       priority: 8,
-      question: "Professional Golf Attire Preference",
+      question: "What's Your Go-To Golf Outfit?",
       options: [
         {
-          text: "Traditional Club Standards",
-          icon: <User className="w-8 h-8 text-blue-600" />,
-          description: "Polo shirt and dress pants",
+          text: "Polo, khakis, and proper golf shoes",
+          image: "👔⛳",
           scores: { traditionalism: 8, luxuryLevel: 6, competitiveness: 6, genderLean: 1 }
         },
         {
-          text: "Modern Athletic Wear",
-          icon: <Zap className="w-8 h-8 text-green-600" />,
-          description: "Performance-focused apparel",
+          text: "Athletic wear and spikeless sneakers",
+          image: "👟🏃",
           scores: { pace: 8, ageGeneration: 7, traditionalism: 3, competitiveness: 5 }
         },
         {
-          text: "Comfortable Casual",
-          icon: <Users className="w-8 h-8 text-purple-600" />,
-          description: "Relaxed and practical",
+          text: "Whatever's comfortable and clean",
+          image: "👕😌",
           scores: { socialness: 7, traditionalism: 2, luxuryLevel: 3, competitiveness: 3 }
         },
         {
-          text: "Premium Designer",
-          icon: <Star className="w-8 h-8 text-amber-600" />,
-          description: "High-end golf fashion",
+          text: "Designer golf gear and accessories",
+          image: "💎👑",
           scores: { luxuryLevel: 9, traditionalism: 5, socialness: 4, amenityImportance: 7 }
         }
       ]
@@ -401,99 +381,90 @@ const GolfProfiler = () => {
 
   if (isComplete && profile) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
             {/* Professional Header */}
-            <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white px-8 py-12">
+            <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center mb-4">
-                    <div className="bg-white/10 rounded-lg p-3 mr-4">
-                      <Award className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-3xl font-bold">Golf Profile Assessment</h1>
-                      <p className="text-gray-300 text-lg mt-1">Professional Analysis Report</p>
-                    </div>
+                  <div className="flex items-center mb-3">
+                    <Award className="mr-3 text-gold-400" size={32} />
+                    <h1 className="text-3xl font-light">Your Professional Golf Profile</h1>
                   </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                      <Brain className="text-blue-300 mr-2" size={16} />
-                      <span className="text-sm">AI-Enhanced Analysis</span>
+                  <p className="text-blue-200 text-lg">
+                    Comprehensive analysis based on {Object.keys(answers).length} data points
+                  </p>
+                  <div className="flex items-center mt-4 space-x-6">
+                    <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
+                      <Brain className="text-purple-300 mr-2" size={16} />
+                      <span className="text-sm text-blue-100">AI-Enhanced Analysis</span>
                     </div>
-                    <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                      <Target className="text-green-300 mr-2" size={16} />
-                      <span className="text-sm">
+                    <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
+                      <Sparkles className="text-yellow-300 mr-2" size={16} />
+                      <span className="text-sm text-blue-100">
                         {Math.round((mlStats?.model?.confidence || 0.91) * 100)}% Confidence
                       </span>
                     </div>
-                    <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                      <BarChart3 className="text-purple-300 mr-2" size={16} />
-                      <span className="text-sm">{Object.keys(answers).length} Data Points</span>
-                    </div>
                   </div>
                 </div>
-                <div className="text-right hidden md:block">
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <Circle className="w-12 h-12 text-white mx-auto mb-2" />
-                    <div className="text-sm text-gray-300">Session</div>
-                    <div className="text-xs text-gray-400">#{sessionId.slice(-6)}</div>
-                  </div>
+                <div className="text-right">
+                  <div className="text-4xl mb-2">⛳</div>
+                  <div className="text-sm text-blue-200">Session #{sessionId.slice(-6)}</div>
                 </div>
               </div>
             </div>
 
-            {/* Core Profile Section */}
-            <div className="px-8 py-8">
-              <div className="grid lg:grid-cols-3 gap-8 mb-8">
-                {/* Player Profile */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            {/* Core Profile Cards */}
+            <div className="p-8">
+              <div className="grid lg:grid-cols-3 gap-6 mb-8">
+                {/* Golfer Identity */}
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/50 rounded-xl p-6">
                   <div className="flex items-center mb-4">
-                    <div className="bg-blue-600 rounded-lg p-2 mr-3">
-                      <User className="text-white" size={20} />
+                    <div className="bg-emerald-500 rounded-lg p-2 mr-3">
+                      <Star className="text-white" size={20} />
                     </div>
-                    <h3 className="font-semibold text-gray-900 text-lg">Player Profile</h3>
+                    <h3 className="font-semibold text-emerald-900 text-lg">Golfer Identity</h3>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <div className="text-2xl font-bold text-gray-900 mb-1">{profile.skillLevel?.label}</div>
-                      <div className="text-blue-600 font-medium">{profile.personality?.primary}</div>
+                      <p className="text-2xl font-bold text-emerald-800">{profile.skillLevel?.label}</p>
+                      <p className="text-emerald-600 font-medium">{profile.personality?.primary}</p>
                     </div>
                     {profile.mlInsights?.personalityPatterns && (
-                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                      <div className="bg-white/60 rounded-lg p-3 border border-emerald-200/30">
                         <div className="flex items-center text-sm">
                           <Brain size={14} className="text-purple-600 mr-2" />
-                          <span className="text-gray-700">Enhanced personality analysis applied</span>
+                          <span className="text-gray-700">Enhanced personality analysis</span>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Analytics */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                {/* Player Insights */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 rounded-xl p-6">
                   <div className="flex items-center mb-4">
-                    <div className="bg-green-600 rounded-lg p-2 mr-3">
-                      <BarChart3 className="text-white" size={20} />
+                    <div className="bg-blue-500 rounded-lg p-2 mr-3">
+                      <Users className="text-white" size={20} />
                     </div>
-                    <h3 className="font-semibold text-gray-900 text-lg">Player Analytics</h3>
+                    <h3 className="font-semibold text-blue-900 text-lg">Player Analytics</h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Age Range</span>
-                      <span className="font-semibold text-gray-900">{profile.demographics?.estimatedAge}</span>
+                      <span className="text-blue-700">Estimated Age</span>
+                      <span className="font-semibold text-blue-900">{profile.demographics?.estimatedAge}</span>
                     </div>
                     {similarityInsights && (
                       <>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Similar Profiles</span>
-                          <span className="font-semibold text-gray-900">{similarityInsights.similarUsers}</span>
+                          <span className="text-blue-700">Similar Golfers</span>
+                          <span className="font-semibold text-blue-900">{similarityInsights.similarUsers}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="bg-white/60 rounded-lg p-3 border border-blue-200/30">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Skill Percentile</span>
-                            <span className="font-semibold text-green-700">{similarityInsights.userPercentiles?.skillLevel}th</span>
+                            <span className="font-semibold text-blue-800">{similarityInsights.userPercentiles?.skillLevel}th</span>
                           </div>
                         </div>
                       </>
@@ -501,28 +472,28 @@ const GolfProfiler = () => {
                   </div>
                 </div>
 
-                {/* Confidence Score */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                {/* ML Confidence */}
+                <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200/50 rounded-xl p-6">
                   <div className="flex items-center mb-4">
-                    <div className="bg-purple-600 rounded-lg p-2 mr-3">
+                    <div className="bg-purple-500 rounded-lg p-2 mr-3">
                       <Target className="text-white" size={20} />
                     </div>
-                    <h3 className="font-semibold text-gray-900 text-lg">Analysis Quality</h3>
+                    <h3 className="font-semibold text-purple-900 text-lg">Analysis Quality</h3>
                   </div>
                   <div className="space-y-3">
                     {recommendationInsights && (
                       <>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Confidence</span>
-                          <span className="font-semibold text-gray-900">{recommendationInsights.confidence}</span>
+                          <span className="text-purple-700">Confidence</span>
+                          <span className="font-semibold text-purple-900">{recommendationInsights.confidence}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Personalization</span>
-                          <span className="font-semibold text-gray-900">{recommendationInsights.personalizationLevel}</span>
+                          <span className="text-purple-700">Personalization</span>
+                          <span className="font-semibold text-purple-900">{recommendationInsights.personalizationLevel}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="bg-white/60 rounded-lg p-3 border border-purple-200/30">
                           <div className="text-sm text-gray-700">
-                            Based on {mlStats?.data?.totalProfiles || 0} profiles
+                            Based on {mlStats?.data?.totalProfiles || 0} golfer profiles
                           </div>
                         </div>
                       </>
@@ -531,58 +502,48 @@ const GolfProfiler = () => {
                 </div>
               </div>
 
-              {/* Recommendations Section */}
-              <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8 shadow-sm">
+              {/* Comprehensive Recommendations */}
+              <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-xl p-8 mb-8">
                 <div className="flex items-center mb-6">
-                  <div className="bg-gray-700 rounded-lg p-2 mr-3">
+                  <div className="bg-slate-600 rounded-lg p-2 mr-3">
                     <MapPin className="text-white" size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-xl">Personalized Recommendations</h3>
-                    <p className="text-gray-600 text-sm mt-1">Tailored suggestions based on your profile analysis</p>
+                    <h3 className="font-bold text-slate-900 text-xl">Personalized Recommendations</h3>
+                    {profile.recommendations?.mlEnhanced && (
+                      <p className="text-slate-600 text-sm">AI-enhanced suggestions based on similar golfers</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center mb-2">
-                        <Circle className="text-gray-600 mr-2" size={16} />
-                        <h4 className="font-semibold text-gray-800">Course Style</h4>
-                      </div>
-                      <p className="text-gray-700 font-medium">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200/50">
+                      <h4 className="font-semibold text-gray-800 mb-2">Preferred Course Style</h4>
+                      <p className="text-gray-700 text-lg font-medium">
                         {typeof profile.recommendations?.courseStyle === 'string'
                           ? profile.recommendations.courseStyle
                           : 'Classic parkland'}
                       </p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center mb-2">
-                        <Building className="text-gray-600 mr-2" size={16} />
-                        <h4 className="font-semibold text-gray-800">Budget Range</h4>
-                      </div>
-                      <p className="text-gray-700 font-medium">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200/50">
+                      <h4 className="font-semibold text-gray-800 mb-2">Budget Range</h4>
+                      <p className="text-gray-700 text-lg font-medium">
                         {profile.recommendations?.budgetLevel || 'Mid-range ($50-100)'}
                       </p>
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center mb-2">
-                        <Star className="text-gray-600 mr-2" size={16} />
-                        <h4 className="font-semibold text-gray-800">Essential Amenities</h4>
-                      </div>
+                    <div className="bg-white rounded-lg p-4 border border-gray-200/50">
+                      <h4 className="font-semibold text-gray-800 mb-2">Essential Amenities</h4>
                       <p className="text-gray-700">
                         {Array.isArray(profile.recommendations?.amenities)
                           ? profile.recommendations.amenities.join(', ')
                           : 'Practice facilities, Pro shop'}
                       </p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center mb-2">
-                        <MapPin className="text-gray-600 mr-2" size={16} />
-                        <h4 className="font-semibold text-gray-800">Accommodation</h4>
-                      </div>
+                    <div className="bg-white rounded-lg p-4 border border-gray-200/50">
+                      <h4 className="font-semibold text-gray-800 mb-2">Accommodation</h4>
                       <p className="text-gray-700">
                         {profile.recommendations?.lodging || 'Comfortable, convenient location'}
                       </p>
@@ -592,78 +553,72 @@ const GolfProfiler = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4 mb-8">
+              <div className="flex flex-wrap gap-4">
                 <button
                   onClick={restart}
-                  className="flex-1 min-w-48 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center font-medium shadow-sm"
+                  className="flex-1 min-w-48 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 px-8 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  <RotateCcw className="mr-2" size={18} />
-                  New Assessment
+                  <RotateCcw className="mr-3" size={20} />
+                  <span className="font-semibold">New Analysis</span>
                 </button>
 
                 <button
                   onClick={() => setShowInsights(!showInsights)}
-                  className="flex-1 min-w-48 bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center font-medium shadow-sm"
+                  className="flex-1 min-w-48 bg-gradient-to-r from-purple-600 to-violet-600 text-white py-4 px-8 rounded-xl hover:from-purple-700 hover:to-violet-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  <Lightbulb className="mr-2" size={18} />
-                  {showInsights ? 'Hide' : 'Show'} Insights
+                  <Lightbulb className="mr-3" size={20} />
+                  <span className="font-semibold">{showInsights ? 'Hide' : 'Show'} Insights</span>
                 </button>
 
                 <button
                   onClick={() => setShowMLStats(!showMLStats)}
-                  className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center font-medium shadow-sm"
+                  className="bg-gradient-to-r from-slate-600 to-gray-600 text-white py-4 px-8 rounded-xl hover:from-slate-700 hover:to-gray-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  <BarChart3 className="mr-2" size={18} />
-                  Analytics
+                  <BarChart3 className="mr-3" size={20} />
+                  <span className="font-semibold">Analytics</span>
                 </button>
               </div>
 
               {/* Enhanced Insights Panel */}
               {showInsights && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
-                  <h3 className="font-bold text-blue-900 text-xl mb-6 flex items-center">
-                    <Lightbulb className="mr-3 text-blue-600" size={24} />
-                    Advanced Analytics & Insights
+                <div className="mt-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/50 rounded-xl p-8">
+                  <h3 className="font-bold text-indigo-900 text-xl mb-6 flex items-center">
+                    <Lightbulb className="mr-3 text-indigo-600" size={24} />
+                    Advanced AI Insights & Analytics
                   </h3>
 
                   <div className="grid md:grid-cols-2 gap-8">
                     {similarityInsights && (
-                      <div className="bg-white rounded-lg p-6 border border-blue-200">
-                        <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
-                          <Users className="mr-2 text-blue-600" size={18} />
-                          Similarity Analysis
-                        </h4>
+                      <div className="bg-white/70 rounded-lg p-6 border border-indigo-200/30">
+                        <h4 className="font-semibold text-gray-800 mb-4">Similarity Analysis</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Similar Profiles</span>
-                            <span className="font-semibold text-blue-700">{similarityInsights.similarUsers}</span>
+                            <span className="text-gray-600">Similar Golfers Found</span>
+                            <span className="font-bold text-indigo-700">{similarityInsights.similarUsers}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Average Match</span>
-                            <span className="font-semibold text-blue-700">{(similarityInsights.averageSimilarity * 100).toFixed(0)}%</span>
+                            <span className="text-gray-600">Average Match Score</span>
+                            <span className="font-bold text-indigo-700">{(similarityInsights.averageSimilarity * 100).toFixed(0)}%</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Best Match</span>
-                            <span className="font-semibold text-blue-700">{(similarityInsights.topMatches[0]?.similarity * 100).toFixed(0)}%</span>
+                            <span className="font-bold text-indigo-700">{(similarityInsights.topMatches[0]?.similarity * 100).toFixed(0)}%</span>
                           </div>
                         </div>
                       </div>
                     )}
 
                     {recommendationInsights && (
-                      <div className="bg-white rounded-lg p-6 border border-blue-200">
-                        <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
-                          <Target className="mr-2 text-purple-600" size={18} />
-                          Recommendation Quality
-                        </h4>
+                      <div className="bg-white/70 rounded-lg p-6 border border-indigo-200/30">
+                        <h4 className="font-semibold text-gray-800 mb-4">Recommendation Quality</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Confidence Level</span>
-                            <span className="font-semibold text-purple-700">{recommendationInsights.confidence}</span>
+                            <span className="font-bold text-purple-700">{recommendationInsights.confidence}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Personalization</span>
-                            <span className="font-semibold text-purple-700">{recommendationInsights.personalizationLevel}</span>
+                            <span className="font-bold text-purple-700">{recommendationInsights.personalizationLevel}</span>
                           </div>
                           {recommendationInsights.improvementSuggestions && (
                             <div className="mt-4 pt-4 border-t border-gray-200">
@@ -694,77 +649,70 @@ const GolfProfiler = () => {
   // Quiz Interface
   const currentQ = selectedQuestions[currentQuestion];
   if (!currentQ) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="text-center">
-        <div className="bg-white rounded-lg p-8 shadow-lg border border-gray-200">
-          <Brain className="mx-auto text-blue-600 mb-4 animate-pulse" size={48} />
-          <p className="text-gray-600 text-lg font-medium">Initializing Assessment</p>
-          <p className="text-gray-500 text-sm mt-2">Preparing AI-enhanced analysis system...</p>
-        </div>
+        <Brain className="mx-auto text-indigo-600 mb-4 animate-pulse" size={48} />
+        <p className="text-gray-600 text-lg">Initializing AI-enhanced analysis...</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
           {/* Professional Quiz Header */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white px-8 py-12">
+          <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-8">
             <div className="text-center">
-              <div className="flex justify-center items-center mb-6">
-                <div className="bg-white/10 rounded-lg p-3 mr-4">
-                  <Award className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold">Golf Profile Assessment</h1>
-                  <p className="text-gray-300 text-lg mt-1">Professional Analysis System</p>
-                </div>
-                <div className="bg-white/10 rounded-lg p-3 ml-4">
-                  <Brain className="w-8 h-8 text-white" />
-                </div>
+              <div className="flex justify-center items-center mb-4">
+                <Award className="mr-3 text-gold-400" size={32} />
+                <h1 className="text-3xl font-light">Professional Golf Profile Assessment</h1>
+                <Brain className="ml-3 text-purple-300" size={28} />
               </div>
+              <p className="text-blue-200 text-lg mb-6">
+                AI-powered personality and preference analysis
+              </p>
 
-              {/* Progress Indicator */}
-              <div className="flex justify-center mb-8">
+              {/* Enhanced Progress Indicator */}
+              <div className="flex justify-center mb-6">
                 <div className="flex space-x-2">
                   {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
                       className={`h-2 rounded-full transition-all duration-500 ${
                         i < Object.keys(answers).length
-                          ? 'w-12 bg-blue-400'
+                          ? 'w-8 bg-emerald-400 shadow-lg shadow-emerald-400/50'
                           : i === Object.keys(answers).length
-                          ? 'w-12 bg-blue-300 animate-pulse'
-                          : 'w-8 bg-white/30'
+                          ? 'w-8 bg-emerald-300 animate-pulse'
+                          : 'w-6 bg-white/30'
                       }`}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className="text-sm text-gray-300 mb-6">
+              <div className="text-sm text-blue-200">
                 Question {Object.keys(answers).length + 1} of 5
               </div>
 
-              <div className="flex items-center justify-center space-x-6">
-                <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                  <Brain size={14} className="mr-2 text-blue-300" />
-                  <span className="text-xs">AI-Enhanced</span>
+              <div className="flex items-center justify-center mt-4 space-x-6">
+                <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
+                  <Brain size={14} className="mr-2 text-purple-300" />
+                  <span className="text-xs text-blue-100">ML-Enhanced Selection</span>
                 </div>
                 {mlStats?.model?.confidence !== undefined && (
-                  <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                    <Target size={14} className="mr-2 text-green-300" />
-                    <span className="text-xs">
-                      {Math.round(mlStats.model.confidence * 100)}% Accuracy
+                  <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
+                    <Zap size={14} className="mr-2 text-yellow-300" />
+                    <span className="text-xs text-blue-100">
+                      {Math.round(mlStats.model.confidence * 100)}% Model Accuracy
                     </span>
                   </div>
                 )}
                 {mlStats?.data?.totalProfiles > 0 && (
-                  <div className="flex items-center bg-white/10 rounded-lg px-4 py-2">
-                    <Users size={14} className="mr-2 text-purple-300" />
-                    <span className="text-xs">
-                      {mlStats.data.totalProfiles} Profiles
+                  <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
+                    <Users size={14} className="mr-2 text-emerald-300" />
+                    <span className="text-xs text-blue-100">
+                      Learning from {mlStats.data.totalProfiles} golfers
                     </span>
                   </div>
                 )}
@@ -773,9 +721,9 @@ const GolfProfiler = () => {
           </div>
 
           {/* Question Content */}
-          <div className="px-8 py-12">
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-center text-gray-900 mb-12">
+          <div className="p-8">
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                 {currentQ.question}
               </h2>
 
@@ -784,45 +732,40 @@ const GolfProfiler = () => {
                   <button
                     key={index}
                     onClick={() => handleAnswer(index)}
-                    className="group relative bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 hover:shadow-lg transition-all duration-200 text-left"
+                    className="group relative bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-indigo-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-gradient-to-br hover:from-white hover:to-indigo-50"
                   >
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
-                        {option.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 text-lg mb-2 transition-colors duration-200">
-                          {option.text}
-                        </h3>
-                        <p className="text-gray-600 text-sm group-hover:text-gray-700 transition-colors duration-200">
-                          {option.description}
-                        </p>
-                      </div>
-                      <ChevronRight className="flex-shrink-0 text-gray-300 group-hover:text-blue-500 transition-all duration-200 transform group-hover:translate-x-1" size={20} />
+                    <div className="text-5xl mb-4 text-center transition-transform duration-300 group-hover:scale-110">
+                      {option.image}
                     </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-gray-800 group-hover:text-indigo-700 text-lg transition-colors duration-300">
+                        {option.text}
+                      </p>
+                    </div>
+                    <ChevronRight className="absolute bottom-4 right-4 text-gray-300 group-hover:text-indigo-500 transition-all duration-300 transform group-hover:translate-x-1" size={20} />
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Footer Info */}
-            <div className="text-center border-t border-gray-200 pt-8">
-              <div className="flex items-center justify-center space-x-8 text-sm text-gray-500 mb-4">
-                <span className="flex items-center">
-                  <BarChart3 size={14} className="mr-2" />
-                  Progress: {Object.keys(answers).length}/5
-                </span>
+            <div className="text-center border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-center space-x-8 text-sm text-gray-500">
                 <span className="flex items-center">
                   <Target size={14} className="mr-2" />
-                  Confidence: {Math.round((mlStats?.model?.confidence || 0.91) * 100)}%
+                  Questions answered: {Object.keys(answers).length}
+                </span>
+                <span className="flex items-center">
+                  <Sparkles size={14} className="mr-2" />
+                  AI confidence: {Math.round((mlStats?.model?.confidence || 0.91) * 100)}%
                 </span>
               </div>
               {Object.keys(answers).length > 0 && (
                 <button
                   onClick={restart}
-                  className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors duration-200"
+                  className="mt-4 text-sm text-gray-400 hover:text-gray-600 underline transition-colors duration-200"
                 >
-                  Reset Assessment
+                  Start Over
                 </button>
               )}
             </div>
