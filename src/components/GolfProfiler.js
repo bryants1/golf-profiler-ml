@@ -59,8 +59,10 @@ const GolfProfiler = () => {
   });
 
 
-  // Question bank
-  const questionBank = [
+  };
+
+// Question bank (moved outside component to avoid dependency issues)
+const questionBank = [
     // EXISTING 8 QUESTIONS (keep these as-is)
     {
       id: 'golf_movie',
@@ -864,7 +866,7 @@ const GolfProfiler = () => {
     };
 
     initializeML();
-  }, [mlService, scores, selectedQuestions.length, questionBank]);
+  }, [mlService, scores, selectedQuestions.length]);
 
   // 🔥 NOW CHECK FOR ADMIN MODE (after ALL hooks)
   const urlParams = new URLSearchParams(window.location.search);
@@ -1088,7 +1090,6 @@ const GolfProfiler = () => {
     setShowFeedback(false);
     setShowMLStats(false);
     setShowInsights(false);
-    setMlInsights(null);
     setSimilarityInsights(null);
     setRecommendationInsights(null);
     setScores({
