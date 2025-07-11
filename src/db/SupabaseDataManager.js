@@ -6,10 +6,14 @@ export class SupabaseDataManager {
     console.log('🚀 SupabaseDataManager constructor called!');
     console.log('🔍 DEBUGGING ENVIRONMENT VARIABLES:');
     console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- All env keys count:', Object.keys(process.env).length);
     console.log('- All env keys:', Object.keys(process.env));
     console.log('- REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL || 'MISSING');
-    console.log('- REACT_APP_SUPABASE_ANON_KEY:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+    console.log('- REACT_APP_SUPABASE_ANON_KEY:', process.env.REACT_APP_SUPABASE_ANON_KEY ? `SET (${process.env.REACT_APP_SUPABASE_ANON_KEY.length} chars)` : 'MISSING');
     console.log('- Env vars with SUPABASE:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
+    console.log('- Env vars with REACT_APP:', Object.keys(process.env).filter(k => k.includes('REACT_APP')));
+    console.log('- Raw URL check:', JSON.stringify(process.env.REACT_APP_SUPABASE_URL));
+    console.log('- Raw KEY check:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'EXISTS' : 'NULL/UNDEFINED');
 
     const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
     const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
