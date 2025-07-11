@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
     if (key.includes('golf_profiler')) {
       return memoryStorage[key] || null;
     } else {
-      return originalGetItem.call(this, key, value);
+      return originalGetItem.call(this, key);
     }
   };
 }
