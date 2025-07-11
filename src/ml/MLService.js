@@ -1,11 +1,12 @@
 // MLService.js - Fixed ML Service with working components
 
 // Import working components
-import { MemoryDataManager, EnhancedQuestionSelector } from './FixedMLSystem.js';
+import { EnhancedQuestionSelector } from './FixedMLSystem.js';
 import { SimilarityCalculator } from './SimilarityCalculator.js';
 import { FeedbackCollector } from './FeedbackCollector.js';
 import { RecommendationEngine } from './RecommendationEngine.js';
 import { ML_CONFIG } from './MLConfig.js';
+import { SupabaseDataManager } from '../db/SupabaseDataManager.js';
 
 export class MLService {
   constructor(options = {}) {
@@ -13,7 +14,7 @@ export class MLService {
     this.options = options;
 
     // Initialize core components with working classes
-    this.dataManager = new MemoryDataManager();
+    this.dataManager = new SupabaseDataManager();
     this.similarityCalculator = new SimilarityCalculator();
     this.questionSelector = new EnhancedQuestionSelector(this.dataManager);
     this.feedbackCollector = new FeedbackCollector(this.dataManager);
