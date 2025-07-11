@@ -44,7 +44,7 @@ const GolfProfiler = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showMLStats, setShowMLStats] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
-  const [isEditing, setIsEditing] = useState(isEditing(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [editingAnswers, setEditingAnswers] = useState({});
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
