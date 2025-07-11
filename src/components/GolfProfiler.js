@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, RotateCcw, MapPin, Star, Users, Clock, Brain, TrendingUp, Edit3, Settings, BarChart3, Lightbulb, Target, Zap } from 'lucide-react';
+import { ChevronRight, RotateCcw, MapPin, Star, Users, Brain, TrendingUp, Edit3, BarChart3, Lightbulb, Target, Zap } from 'lucide-react';
 import MLAdminInterface from './MLAdminInterface';
 // Import ML System
 import MLService from '../ml/MLService.js';
@@ -46,10 +46,8 @@ const GolfProfiler = () => {
   const [showInsights, setShowInsights] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingAnswers, setEditingAnswers] = useState({});
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   // ML State hooks
-  const [mlInsights, setMlInsights] = useState(null);
   const [similarityInsights, setSimilarityInsights] = useState(null);
   const [recommendationInsights, setRecommendationInsights] = useState(null);
   const [mlStats, setMlStats] = useState(null);
@@ -866,7 +864,7 @@ const GolfProfiler = () => {
     };
 
     initializeML();
-  }, [mlService, scores, selectedQuestions.length]);
+  }, [mlService, scores, selectedQuestions.length, questionBank]);
 
   // 🔥 NOW CHECK FOR ADMIN MODE (after ALL hooks)
   const urlParams = new URLSearchParams(window.location.search);
