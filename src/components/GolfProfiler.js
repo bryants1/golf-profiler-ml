@@ -1315,7 +1315,7 @@ const GolfProfiler = () => {
                     </div>
                     <div>
                       <p className="font-medium">Top Match</p>
-                      <p className="text-purple-600">{similarityInsights.topMatches[0] ? (similarityInsights.topMatches[0].similarity * 100).toFixed(0) + '%' : 'N/A'}</p>
+                      <p className="text-purple-600">{similarityInsights.topMatches && similarityInsights.topMatches[0] ? (similarityInsights.topMatches[0].similarity * 100).toFixed(0) + '%' : 'N/A'}</p>
                     </div>
                     <div>
                       <p className="font-medium">Skill Percentile</p>
