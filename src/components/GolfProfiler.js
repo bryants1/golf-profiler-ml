@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
     if (key.includes('golf_profiler')) {
       return memoryStorage[key] || null;
     } else {
-      return originalGetItem.call(this, key);
+      return originalGetItem.call(this, key, value);
     }
   };
 }
@@ -44,7 +44,7 @@ const GolfProfiler = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showMLStats, setShowMLStats] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isEditing(false);
   const [editingAnswers, setEditingAnswers] = useState({});
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
@@ -1538,6 +1538,7 @@ const GolfProfiler = () => {
     </div>
   );
 
+  // Pass sessionId to ML service for A/B testing
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
       <div className="bg-white rounded-xl shadow-lg p-8">
@@ -1592,7 +1593,7 @@ const GolfProfiler = () => {
                   </p>
                 </div>
                 <ChevronRight className="text-gray-400 group-hover:text-green-500 ml-auto mt-2 transition" size={20} />
-              </button>
+                            </button>
             ))}
           </div>
         </div>

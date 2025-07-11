@@ -47,6 +47,10 @@ export class MLService {
       lastUpdated: Date.now()
     };
 
+    // A/B Testing initialization
+    this.abTestMetrics = {};
+    this.activeABTests = {};
+
     console.log('🚀 Starting MLService initialization...');
     // Initialize the service
     this.initialize();
@@ -191,7 +195,7 @@ export class MLService {
     }
   }
 
-  // Smart question selection with ML
+  // Smart question selection with A/B testing
   selectNextQuestion(currentAnswers, currentScores, questionBank, questionNumber, userContext = {}) {
     console.log('🎯 selectNextQuestion called');
 
@@ -202,15 +206,33 @@ export class MLService {
     }
 
     try {
-      console.log('🤖 Using ML question selection');
+      // A/B Testing: Randomly assign users to different algorithms
+      const sessionId = userContext.sessionId || 'default';
+      const abTestVariant = this.getABTestVariant(sessionId, 'question_selection');
+      
+      console.log('🧪 A/B Test variant:', abTestVariant);
 
-      const selectedQuestion = this.questionSelector.selectNextQuestion(
-        currentAnswers,
-        currentScores,
-        questionBank,
-        questionNumber,
-        userContext
-      );
+      let selectedQuestion;
+      
+      if (abTestVariant === 'enhanced_ml') {
+        console.log('🤖 Using Enhanced ML question selection (Variant A)');
+        selectedQuestion = this.questionSelector.selectNextQuestion(
+          currentAnswers,
+          currentScores,
+          questionBank,
+          questionNumber,
+          userContext
+        );
+      } else if (abTestVariant === 'priority_based') {
+        console.log('📊 Using Priority-based question selection (Variant B)');
+        selectedQuestion = this.priorityBasedQuestionSelection(currentAnswers, questionBank, questionNumber);
+      } else {
+        console.log('🎯 Using Random selection (Control)');
+        selectedQuestion = this.randomQuestionSelection(currentAnswers, questionBank, questionNumber);
+      }
+
+      // Track A/B test performance
+      this.trackABTestMetric(sessionId, 'question_selection', abTestVariant, 'question_selected', selectedQuestion?.id);
 
       console.log('✅ ML question selected:', selectedQuestion?.id);
       return selectedQuestion;
@@ -922,6 +944,123 @@ export class MLService {
     }
   }
 
+  // A/B Testing Implementation
+  getABTestVariant(sessionId, testType) {
+    // Hash sessionId to ensure consistent assignment
+    const hash = this.hashString(sessionId);
+    const hashNumber = parseInt(hash.substring(0, 8), 16);
+    const variant = hashNumber % 3;
+    
+    const variants = {
+      0: 'enhanced_ml',     // 33% get enhanced ML
+      1: 'priority_based',  // 33% get priority-based
+      2: 'random'          // 33% get random (control)
+    };
+    
+    return variants[variant];
+  }
+
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(16);
+  }
+
+  trackABTestMetric(sessionId, testType, variant, metricName, metricValue) {
+    if (!this.abTestMetrics) {
+      this.abTestMetrics = {};
+    }
+    
+    const key = `${testType}_${variant}`;
+    if (!this.abTestMetrics[key]) {
+      this.abTestMetrics[key] = {
+        variant,
+        testType,
+        metrics: {},
+        users: new Set()
+      };
+    }
+    
+    this.abTestMetrics[key].users.add(sessionId);
+    
+    if (!this.abTestMetrics[key].metrics[metricName]) {
+      this.abTestMetrics[key].metrics[metricName] = [];
+    }
+    
+    this.abTestMetrics[key].metrics[metricName].push({
+      value: metricValue,
+      timestamp: Date.now(),
+      sessionId
+    });
+    
+    console.log(`📊 A/B Test tracked: ${testType}/${variant} - ${metricName}:`, metricValue);
+  }
+
+  // Alternative question selection methods for A/B testing
+  priorityBasedQuestionSelection(currentAnswers, questionBank, questionNumber) {
+    if (questionNumber === 0) {
+      const starter = questionBank.find(q => q.type === 'starter') || questionBank[0];
+      return starter;
+    }
+
+    const answeredIds = Object.keys(currentAnswers);
+    const unanswered = questionBank.filter(q => !answeredIds.includes(q.id));
+    
+    if (unanswered.length === 0) return null;
+    
+    // Sort by priority only
+    const sorted = unanswered.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    return sorted[0];
+  }
+
+  randomQuestionSelection(currentAnswers, questionBank, questionNumber) {
+    if (questionNumber === 0) {
+      const starter = questionBank.find(q => q.type === 'starter') || questionBank[0];
+      return starter;
+    }
+
+    const answeredIds = Object.keys(currentAnswers);
+    const unanswered = questionBank.filter(q => !answeredIds.includes(q.id));
+    
+    if (unanswered.length === 0) return null;
+    
+    // Completely random selection
+    return unanswered[Math.floor(Math.random() * unanswered.length)];
+  }
+
+  // Get A/B test results
+  getABTestResults() {
+    if (!this.abTestMetrics) return {};
+    
+    const results = {};
+    
+    Object.keys(this.abTestMetrics).forEach(key => {
+      const testData = this.abTestMetrics[key];
+      results[key] = {
+        variant: testData.variant,
+        testType: testData.testType,
+        userCount: testData.users.size,
+        metrics: {}
+      };
+      
+      // Calculate average metrics
+      Object.keys(testData.metrics).forEach(metricName => {
+        const values = testData.metrics[metricName];
+        results[key].metrics[metricName] = {
+          count: values.length,
+          average: values.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : 1), 0) / values.length,
+          latest: values[values.length - 1]?.value
+        };
+      });
+    });
+    
+    return results;
+  }
+
   // Admin functions for testing (simplified)
   async createNewScoringAlgorithm(algorithmData) {
     console.log('📝 Mock: New scoring algorithm created:', algorithmData.version);
@@ -929,8 +1068,24 @@ export class MLService {
   }
 
   async createABTest(testConfig) {
-    console.log('🧪 Mock: A/B test created:', testConfig.testName);
-    return { success: true, id: Date.now() };
+    console.log('🧪 A/B test created:', testConfig.testName);
+    
+    // Store A/B test configuration
+    if (!this.activeABTests) {
+      this.activeABTests = {};
+    }
+    
+    const testId = Date.now();
+    this.activeABTests[testId] = {
+      id: testId,
+      testName: testConfig.testName,
+      algorithmType: testConfig.algorithmType,
+      variants: testConfig.variants || ['enhanced_ml', 'priority_based', 'random'],
+      startDate: new Date().toISOString(),
+      status: 'running'
+    };
+    
+    return { success: true, id: testId };
   }
 
   async activateAlgorithm(algorithmType, version) {
