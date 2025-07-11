@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Settings,
-  Activity,
   GitBranch,
   BarChart3,
   Zap,
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Users,
-  Database,
-  Cpu,
-  Target
+  Cpu
 } from 'lucide-react';
 
 const MLAdminInterface = ({ mlService }) => {
