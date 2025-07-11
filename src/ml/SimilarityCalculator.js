@@ -187,7 +187,8 @@ export class SimilarityCalculator {
     });
 
     // Step 3: Progressive threshold adjustment
-    let threshold = 0.7;
+    const similarityThreshold = 0.7;
+    let threshold = similarityThreshold;
     let found = [];
 
     while (found.length < minResults && threshold > 0.3) {
@@ -312,37 +313,6 @@ export class SimilarityCalculator {
     return compatibilityMatrix[archetype1]?.includes(archetype2) || false;
   }
 
-  // Debug similarity calculation
-  debugSimilarityCalculation(scores1, scores2) {
-    const dimensions = ML_CONFIG.SIMILARITY_DIMENSIONS;
-    console.log('🔍 Debug similarity calculation:');
-    console.log('👤 User 1 scores:', scores1);
-    console.log('👤 User 2 scores:', scores2);
-
-    let totalSimilarity = 0;
-    let dimensionCount = 0;
-
-    dimensions.forEach(dim => {
-      const val1 = scores1[dim] || 0;
-      const val2 = scores2[dim] || 0;
-      const diff = Math.abs(val1 - val2);
-      const dimSimilarity = 1 - (diff / 10);
-
-      console.log(`  ${dim}: ${val1} vs ${val2} = ${dimSimilarity.toFixed(3)} similarity`);
-
-      totalSimilarity += dimSimilarity;
-      dimensionCount++;
-    });
-
-    const avgSimilarity = totalSimilarity / dimensionCount;
-    console.log(`📊 Average similarity: ${avgSimilarity.toFixed(3)}`);
-
-    const weightedSimilarity = this.weightedEuclideanSimilarity(scores1, scores2);
-    console.log(`⚖️ Weighted similarity: ${weightedSimilarity.toFixed(3)}`);
-
-    return weightedSimilarity;
-  }
-
   // Apply diversity filtering to avoid echo chambers
   applyDiversityFilter(similarities, diversityFactor) {
     if (similarities.length <= 3) return similarities;
@@ -404,6 +374,74 @@ export class SimilarityCalculator {
       pace: 0.9,            // Somewhat important
       genderLean: 0.7       // Less critical for recommendations
     };
+  }
+
+  // Debug similarity calculation
+  debugSimilarityCalculation(scores1, scores2) {
+    const dimensions = ML_CONFIG.SIMILARITY_DIMENSIONS;
+    console.log('🔍 Debug similarity calculation:');
+    console.log('👤 User 1 scores:', scores1);
+    console.log('👤 User 2 scores:', scores2);
+
+    let totalSimilarity = 0;
+    let dimensionCount = 0;
+
+    dimensions.forEach(dim => {
+      const val1 = scores1[dim] || 0;
+      const val2 = scores2[dim] || 0;
+      const diff = Math.abs(val1 - val2);
+      const dimSimilarity = 1 - (diff / 10);
+
+      console.log(`  ${dim}: ${val1} vs ${val2} = ${dimSimilarity.toFixed(3)} similarity`);
+
+      totalSimilarity += dimSimilarity;
+      dimensionCount++;
+    });
+
+    const avgSimilarity = totalSimilarity / dimensionCount;
+    console.log(`📊 Average similarity: ${avgSimilarity.toFixed(3)}`);
+
+    const weightedSimilarity = this.weightedEuclideanSimilarity(scores1, scores2);
+    console.log(`⚖️ Weighted similarity: ${weightedSimilarity.toFixed(3)}`);
+
+    return weightedSimilarity;
+  }
+
+  // Similarity explanation for debugging/transparency
+  explainSimilarity(scores1, scores2) {
+    const dimensions = ML_CONFIG.SIMILARITY_DIMENSIONS;
+    const explanation = {
+      overallSimilarity: this.calculateSimilarity(scores1, scores2),
+      dimensionBreakdown: {},
+      strongestMatches: [],
+      biggestDifferences: []
+    };
+
+    dimensions.forEach(dim => {
+      const val1 = scores1[dim] || 0;
+      const val2 = scores2[dim] || 0;
+      const diff = Math.abs(val1 - val2);
+      const similarity = 1 - (diff / 10);
+
+      explanation.dimensionBreakdown[dim] = {
+        user1: val1,
+        user2: val2,
+        difference: diff,
+        similarity: similarity
+      };
+
+      if (similarity > 0.8) {
+        explanation.strongestMatches.push({ dimension: dim, similarity });
+      }
+      if (similarity < 0.3) {
+        explanation.biggestDifferences.push({ dimension: dim, difference: diff });
+      }
+    });
+
+    explanation.strongestMatches.sort((a, b) => b.similarity - a.similarity);
+    explanation.biggestDifferences.sort((a, b) => b.difference - a.difference);
+
+    return explanation;
   }
 
   // Specialized similarity for specific recommendation types
@@ -561,142 +599,6 @@ export class SimilarityCalculator {
     });
 
     return clusters;
-  }
-
-  // Similarity explanation for debugging/transparency
-  explainSimilarity(scores1, scores2) {
-    const dimensions = ML_CONFIG.SIMILARITY_DIMENSIONS;
-    const explanation = {
-      overallSimilarity: this.calculateSimilarity(scores1, scores2),
-      dimensionBreakdown: {},
-      strongestMatches: [],
-      biggestDifferences: []
-    };
-
-    dimensions.forEach(dim => {
-      const val1 = scores1[dim] || 0;
-      const val2 = scores2[dim] || 0;
-      const diff = Math.abs(val1 - val2);
-      const similarity = 1 - (diff / 10);
-
-      explanation.dimensionBreakdown[dim] = {
-        user1: val1,
-        user2: val2,
-        difference: diff,
-        similarity: similarity
-      };
-
-      if (similarity > 0.8) {
-        explanation.strongestMatches.push({ dimension: dim, similarity });
-      }
-      if (similarity < 0.3) {
-        explanation.biggestDifferences.push({ dimension: dim, difference: diff });
-      }
-    });
-
-    explanation.strongestMatches.sort((a, b) => b.similarity - a.similarity);
-    explanation.biggestDifferences.sort((a, b) => b.difference - a.difference);
-
-    return explanation;
-  }
-  // Find all users above threshold
-
-  // Find all users above threshold
-
-  // Find all users above threshold
-}
-  applyDiversityFilter(similarities, diversityFactor) {
-    if (similarities.length <= 3) return similarities;
-
-    const diverseResults = [similarities[0]]; // Always include most similar
-    const remaining = similarities.slice(1);
-
-    while (diverseResults.length < similarities.length && remaining.length > 0) {
-      let bestCandidate = null;
-      let bestScore = -1;
-
-      for (const candidate of remaining) {
-        // Calculate diversity score (how different from already selected)
-        let diversityScore = 0;
-
-        for (const selected of diverseResults) {
-          const diversity = 1 - this.calculateSimilarity(
-            candidate.scores,
-            selected.scores,
-            'weighted_euclidean'
-          );
-          diversityScore += diversity;
-        }
-
-        diversityScore /= diverseResults.length;
-
-        // Combined score: similarity + diversity
-        const combinedScore =
-          candidate.similarity * (1 - diversityFactor) +
-          diversityScore * diversityFactor;
-
-        if (combinedScore > bestScore) {
-          bestScore = combinedScore;
-          bestCandidate = candidate;
-        }
-      }
-
-      if (bestCandidate) {
-        diverseResults.push(bestCandidate);
-        remaining.splice(remaining.indexOf(bestCandidate), 1);
-      } else {
-        break;
-      }
-    }
-
-    return diverseResults;
-  }
-}
-  applyDiversityFilter(similarities, diversityFactor) {
-    if (similarities.length <= 3) return similarities;
-
-    const diverseResults = [similarities[0]]; // Always include most similar
-    const remaining = similarities.slice(1);
-
-    while (diverseResults.length < similarities.length && remaining.length > 0) {
-      let bestCandidate = null;
-      let bestScore = -1;
-
-      for (const candidate of remaining) {
-        // Calculate diversity score (how different from already selected)
-        let diversityScore = 0;
-
-        for (const selected of diverseResults) {
-          const diversity = 1 - this.calculateSimilarity(
-            candidate.scores,
-            selected.scores,
-            'weighted_euclidean'
-          );
-          diversityScore += diversity;
-        }
-
-        diversityScore /= diverseResults.length;
-
-        // Combined score: similarity + diversity
-        const combinedScore =
-          candidate.similarity * (1 - diversityFactor) +
-          diversityScore * diversityFactor;
-
-        if (combinedScore > bestScore) {
-          bestScore = combinedScore;
-          bestCandidate = candidate;
-        }
-      }
-
-      if (bestCandidate) {
-        diverseResults.push(bestCandidate);
-        remaining.splice(remaining.indexOf(bestCandidate), 1);
-      } else {
-        break;
-      }
-    }
-
-    return diverseResults;
   }
 }
 
