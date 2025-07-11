@@ -599,6 +599,105 @@ export class SimilarityCalculator {
 
     return explanation;
   }
+  // Find all users above threshold
+
+  // Find all users above threshold
+
+  // Find all users above threshold
+}
+  applyDiversityFilter(similarities, diversityFactor) {
+    if (similarities.length <= 3) return similarities;
+
+    const diverseResults = [similarities[0]]; // Always include most similar
+    const remaining = similarities.slice(1);
+
+    while (diverseResults.length < similarities.length && remaining.length > 0) {
+      let bestCandidate = null;
+      let bestScore = -1;
+
+      for (const candidate of remaining) {
+        // Calculate diversity score (how different from already selected)
+        let diversityScore = 0;
+
+        for (const selected of diverseResults) {
+          const diversity = 1 - this.calculateSimilarity(
+            candidate.scores,
+            selected.scores,
+            'weighted_euclidean'
+          );
+          diversityScore += diversity;
+        }
+
+        diversityScore /= diverseResults.length;
+
+        // Combined score: similarity + diversity
+        const combinedScore =
+          candidate.similarity * (1 - diversityFactor) +
+          diversityScore * diversityFactor;
+
+        if (combinedScore > bestScore) {
+          bestScore = combinedScore;
+          bestCandidate = candidate;
+        }
+      }
+
+      if (bestCandidate) {
+        diverseResults.push(bestCandidate);
+        remaining.splice(remaining.indexOf(bestCandidate), 1);
+      } else {
+        break;
+      }
+    }
+
+    return diverseResults;
+  }
+}
+  applyDiversityFilter(similarities, diversityFactor) {
+    if (similarities.length <= 3) return similarities;
+
+    const diverseResults = [similarities[0]]; // Always include most similar
+    const remaining = similarities.slice(1);
+
+    while (diverseResults.length < similarities.length && remaining.length > 0) {
+      let bestCandidate = null;
+      let bestScore = -1;
+
+      for (const candidate of remaining) {
+        // Calculate diversity score (how different from already selected)
+        let diversityScore = 0;
+
+        for (const selected of diverseResults) {
+          const diversity = 1 - this.calculateSimilarity(
+            candidate.scores,
+            selected.scores,
+            'weighted_euclidean'
+          );
+          diversityScore += diversity;
+        }
+
+        diversityScore /= diverseResults.length;
+
+        // Combined score: similarity + diversity
+        const combinedScore =
+          candidate.similarity * (1 - diversityFactor) +
+          diversityScore * diversityFactor;
+
+        if (combinedScore > bestScore) {
+          bestScore = combinedScore;
+          bestCandidate = candidate;
+        }
+      }
+
+      if (bestCandidate) {
+        diverseResults.push(bestCandidate);
+        remaining.splice(remaining.indexOf(bestCandidate), 1);
+      } else {
+        break;
+      }
+    }
+
+    return diverseResults;
+  }
 }
 
 export default SimilarityCalculator;

@@ -371,12 +371,13 @@ export class RecommendationEngine {
 
   // Helper methods
   calculateStyleWeights(scores) {
+    const { skillLevel, socialness, traditionalism, luxuryLevel, ageGeneration, amenityImportance, pace } = scores;
     return {
-      'links': scores.traditionalism >= 8 ? 1.3 : 0.8,
-      'parkland': scores.traditionalism >= 6 ? 1.2 : 1.0,
-      'coastal': scores.luxuryLevel >= 7 ? 1.4 : 1.0,
-      'desert': scores.skillLevel >= 6 ? 1.2 : 0.9,
-      'mountain': scores.amenityImportance >= 6 ? 1.1 : 1.0
+      'links': traditionalism >= 8 ? 1.3 : 0.8,
+      'parkland': traditionalism >= 6 ? 1.2 : 1.0,
+      'coastal': luxuryLevel >= 7 ? 1.4 : 1.0,
+      'desert': skillLevel >= 6 ? 1.2 : 0.9,
+      'mountain': amenityImportance >= 6 ? 1.1 : 1.0
     };
   }
 

@@ -71,7 +71,7 @@ export class SupabaseDataManager {
     }
 
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('user_profiles')
         .insert([{
           session_id: profileData.sessionId,
@@ -147,7 +147,7 @@ export class SupabaseDataManager {
     }
 
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('user_feedback')
         .insert([{
           session_id: feedbackData.sessionId,

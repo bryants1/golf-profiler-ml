@@ -44,7 +44,7 @@ const MLAdminInterface = ({ mlService }) => {
 
   useEffect(() => {
     loadAdminData();
-  }, []);
+  }, [loadAdminData]);
 
   const loadAdminData = async () => {
     try {
